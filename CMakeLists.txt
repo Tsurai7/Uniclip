@@ -3,10 +3,18 @@ project(Uniclip)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(ZLIB REQUIRED)
+
 add_executable(Uniclip uniclip.cpp
         Utils/Server/Server.cpp
         Utils/Server/Server.h
         Utils/Clipboard/Clipboard.cpp
         Utils/Clipboard/Clipboard.h
         Utils/Client/Client.cpp
-        Utils/Client/Client.h)
+        Utils/Client/Client.h
+        Utils/Data/Data.cpp
+        Utils/Data/Data.h
+        Utils/Crypto/Crypto.cpp
+        Utils/Crypto/Crypto.h)
+
+target_link_libraries(Uniclip PRIVATE ZLIB::ZLIB)

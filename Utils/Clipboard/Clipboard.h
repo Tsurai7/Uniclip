@@ -3,12 +3,11 @@
 
 #include <iostream>
 
-using namespace std;
+std::string getClipCommand(const char* command);
+void setClipCommand(const char* command, const char* text);
 
-string getClipWin();
-string getClipLinux();
-string getClipDarwin();
+std::string runGetClipCommand();
+void runSetClipCommand(const char* text);
 
-string runGetClipCommand();
 
 #endif //UNICLIP_CLIPBOARD_H

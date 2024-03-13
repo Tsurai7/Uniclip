@@ -1,23 +1,34 @@
 #include "Clipboard.h"
 
-
-string runGetClipCommand() {
+std::string runGetClipCommand() {
     #ifdef __APPLE__
-        return getClipDarwin();
+        return getClipCommand("pbpaste");
     #elif __linux__
-        return getClipLinux();
-        #elif _WIN32
-            return getClipWin();
-        #else
-            return "Unknown operating system.\n";
+        return getClipCommand("xclip -o");
+    #elif _WIN32
+        return getClipCommand("powershell.exe -command Get-clipboard");
+    #else
+        return "Error: unknown operating system.\n";
     #endif
 }
 
-string getClipLinux() {
-    char buffer[1024];
-    string result;
+void runSetClipCommand(const char* text) {
+    #ifdef __APPLE__
+        return setClipCommand("pbcopy", text);
+    #elif __linux__
+        return setClipCommand(xclip -selection clipboard", text);
+    #elif _WIN32
+        return setClipCommand(powershell.exe -command -clip", text);
+    #else
+        return;
+    #endif
+}
 
-    FILE* pipe = popen("xclip -o", "r");
+std::string getClipCommand(const char* command) {
+    char buffer[1024];
+    std::string result;
+
+    FILE* pipe = popen(command, "r");
 
     if (!pipe) {
         return "Error opening pipe!";
@@ -36,48 +47,23 @@ string getClipLinux() {
     return result;
 }
 
-string getClipDarwin() {
-    char buffer[1024];
-    string result;
 
-    FILE *pipe = popen("pbpaste", "r");
+void setClipCommand(const char* command, const char* text) {
+    FILE *pipe = popen(command, "w");
 
     if (!pipe) {
-        return "Error opening pipe!";
+        std::cerr << "Ошибка при открытии потока для команды pbcopy" << std::endl;
+        return;
     }
 
-    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-        result += buffer;
-    }
+    fprintf(pipe, "%s", text);
 
     int status = pclose(pipe);
 
     if (status == -1) {
-        return "Error closing pipe!";
+        std::cerr << "Ошибка при закрытии потока для команды pbcopy" << std::endl;
+        return;
     }
 
-    return result;
-}
-
-string getClipWin() {
-    char buffer[1024];
-    string result;
-
-    FILE* pipe = popen("powershell.exe -command Get-clipboard", "r");
-
-    if (!pipe) {
-        return "Error opening pipe!";
-    }
-
-    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-        result += buffer;
-    }
-
-    int status = pclose(pipe);
-
-    if (status == -1) {
-        return "Error closing pipe!";
-    }
-
-    return result;
+    return;
 }
