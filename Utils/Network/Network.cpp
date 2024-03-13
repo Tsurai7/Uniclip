@@ -4,7 +4,7 @@
 #define BROADCAST_ADDRESS "192.168.1.255"
 
 
-void sendBroadcast(char* message) {
+void sendBroadcast(const char* message) {
     int socket_fd;
     struct sockaddr_in broadcast_address;
 
@@ -32,21 +32,16 @@ void sendBroadcast(char* message) {
         exit(EXIT_FAILURE);
     }
 
-    while (1) {
-
-        if (sendto(socket_fd, message, strlen(message), 0, (struct sockaddr *)&broadcast_address, sizeof(broadcast_address)) == -1) {
-            perror("Sendto failed");
-            close(socket_fd);
-            exit(EXIT_FAILURE);
-        }
-
-        printf("Broadcast message sent: %s\n", message);
-
-        sleep(1);
+    if (sendto(socket_fd, message, strlen(message), 0, (struct sockaddr *)&broadcast_address, sizeof(broadcast_address)) == -1) {
+        perror("Sendto failed");
+        close(socket_fd);
+        exit(EXIT_FAILURE);
     }
 
-    close(socket_fd);
+    printf("Broadcast message sent: %s\n", message);
+    sleep(1);
 }
+
 
 void receiveBroadcast() {
     int socket_fd;
@@ -65,7 +60,7 @@ void receiveBroadcast() {
     server_address.sin_port = htons(BROADCAST_PORT);
 
     // Привязка сокета к адресу
-    if (bind(socket_fd, (struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
+    if (bind(socket_fd, (const struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
         perror("Bind failed");
         close(socket_fd);
         exit(EXIT_FAILURE);
@@ -89,6 +84,5 @@ void receiveBroadcast() {
         printf("Received message from %s:%d: %s\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port), buffer);
     }
 
-    // Закрытие сокета (не достижимо в данном примере)
     close(socket_fd);
 }

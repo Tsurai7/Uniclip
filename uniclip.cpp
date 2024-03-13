@@ -1,8 +1,4 @@
 #include <iostream>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
 #include <unistd.h>
 
 #include "Utils/Clipboard/Clipboard.h"
@@ -22,7 +18,7 @@ int main() {
 
     // cout << runGetClipCommand() << endl;
 
-    /* const char *inputData = "Text messaging, or texting, is the act of composing and sending electronic messages, typically consisting of alphabetic and numeric characters, between two or more users of mobile devices, desktops/laptops, or another type of compatible computer. Text messages may be sent over a cellular network or may also be sent via satellite or Internet connection.\n"
+     /* const char *inputData = "Text messaging, or texting, is the act of composing and sending electronic messages, typically consisting of alphabetic and numeric characters, between two or more users of mobile devices, desktops/laptops, or another type of compatible computer. Text messages may be sent over a cellular network or may also be sent via satellite or Internet connection.\n"
                             "\n"
                             "The term originally referred to messages sent using the Short Message Service (SMS). It has grown beyond alphanumeric text to include multimedia messages using the Multimedia Messaging Service (MMS) and Rich Communication Services (RCS), which can contain digital images, videos, and sound content, as well as ideograms known as emoji (happy faces, sad faces, and other icons), and instant messenger applications (usually the term is used when on mobile devices).\n"
                             "\n"
@@ -40,10 +36,17 @@ int main() {
     decompressData(compressedData, compressedSize, &decompressedData, &decompressedSize);
 
     printf("Input data: %lu\n", strlen(inputData));
-    printf("Compressed data: %lu\n", strlen(compressedData));
+    printf("Compressed data: %lu\n", compressedData));
     printf("Decompressed data: %lu\n", strlen(decompressedData)); */
 
-    sendBroadcast("hi");
+     while (1) {
+         string ch = runGetClipCommand();
+
+         cout << ch << endl;
+
+         sendBroadcast(ch.c_str());
+         sleep(1);
+     }
 
     return 0;
 }

@@ -12,7 +12,7 @@ std::string runGetClipCommand() {
     #endif
 }
 
-void runSetClipCommand(const char* text) {
+void runSetClipCommand(string text) {
     #ifdef __APPLE__
         return setClipCommand("pbcopy", text);
     #elif __linux__
@@ -48,7 +48,7 @@ std::string getClipCommand(const char* command) {
 }
 
 
-void setClipCommand(const char* command, const char* text) {
+void setClipCommand(const char* command, string text) {
     FILE *pipe = popen(command, "w");
 
     if (!pipe) {
@@ -56,7 +56,7 @@ void setClipCommand(const char* command, const char* text) {
         return;
     }
 
-    fprintf(pipe, "%s", text);
+    fprintf(pipe, "%s", text.c_str());
 
     int status = pclose(pipe);
 

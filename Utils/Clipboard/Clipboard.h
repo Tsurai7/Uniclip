@@ -3,11 +3,13 @@
 
 #include <iostream>
 
-std::string getClipCommand(const char* command);
-void setClipCommand(const char* command, const char* text);
+using namespace std;
 
-std::string runGetClipCommand();
-void runSetClipCommand(const char* text);
+string getClipCommand(const char* command);
+void setClipCommand(const char* command, string text);
+
+string runGetClipCommand();
+void runSetClipCommand(char* text);
 
 
 #endif
