@@ -10,6 +10,6 @@
 
 
 void sendBroadcast(const char* message);
-void receiveBroadcast();
+void receiveBroadcast(char** text);
 
 #endif

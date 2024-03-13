@@ -43,7 +43,7 @@ void sendBroadcast(const char* message) {
 }
 
 
-void receiveBroadcast() {
+void receiveBroadcast(char** text) {
     int socket_fd;
     struct sockaddr_in server_address, client_address;
 
@@ -80,7 +80,7 @@ void receiveBroadcast() {
             close(socket_fd);
             exit(EXIT_FAILURE);
         }
-
+        *text = buffer;
         printf("Received message from %s:%d: %s\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port), buffer);
     }
 

@@ -1,13 +1,35 @@
 #include <iostream>
-#include <unistd.h>
+#include <stdio.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "Utils/Clipboard/Clipboard.h"
 #include "Utils/Network/Network.h"
 #include "Utils/Crypto/Crypto.h"
 #include "Utils/Data/Data.h"
 
-using namespace std;
+//using namespace std;
+
+void* handleClip(void* arg) {
+    string startClip = runGetClipCommand();
+
+    while (1) {
+        string localClip = runGetClipCommand();
+
+        if (localClip != startClip) {
+            startClip = localClip;
+            sendBroadcast(localClip.c_str());
+        }
+
+        sleep(1);
+    }
+}
+
+void* handleBroadcast(void* arg) {
+    char* text;
+    receiveBroadcast(&text);
+    runSetClipCommand(text);
+}
 
 int main() {
     //sendBroadcast("hiiiii");
@@ -37,14 +59,38 @@ int main() {
     printf("Compressed data: %lu\n", compressedData));
     printf("Decompressed data: %lu\n", strlen(decompressedData)); */
 
-     while (1) {
+     /*while (1) {
          string ch = runGetClipCommand();
 
          cout << ch << endl;
 
          sendBroadcast(ch.c_str());
          sleep(1);
-     }
+     } */
+
+    pthread_t thread1, thread2;
+
+    if (pthread_create(&thread1, NULL, handleClip, NULL) != 0) {
+        perror("Thread 1 creation failed");
+        return 1;
+    }
+
+    if (pthread_create(&thread2, NULL, handleBroadcast, NULL) != 0) {
+        perror("Thread 2 creation failed");
+        return 1;
+    }
+
+    // Ожидание завершения потока 1
+    if (pthread_join(thread1, NULL) != 0) {
+        perror("Thread 1 join failed");
+        return 1;
+    }
+
+    // Ожидание завершения потока 2
+    if (pthread_join(thread2, NULL) != 0) {
+        perror("Thread 2 join failed");
+        return 1;
+    }
 
     return 0;
 }
