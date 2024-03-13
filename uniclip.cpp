@@ -6,8 +6,7 @@
 #include <unistd.h>
 
 #include "Utils/Clipboard/Clipboard.h"
-#include "Utils/Server/Server.h"
-#include "Utils/Client/Client.h"
+#include "Utils/Network/Network.h"
 #include "Utils/Data/Data.h"
 #include "Utils/Crypto/Crypto.h"
 
@@ -39,7 +38,6 @@ int main() {
 
     char *decompressedData;
     size_t decompressedSize;
-
 
     decompressData(compressedData, compressedSize, &decompressedData, &decompressedSize);
 

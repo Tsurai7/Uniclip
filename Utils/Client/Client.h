@@ -1,5 +1,0 @@
-#ifndef UNICLIP_CLIENT_H
-#define UNICLIP_CLIENT_H
-
-
-#endif //UNICLIP_CLIENT_H

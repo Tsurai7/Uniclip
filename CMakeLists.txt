@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(ZLIB REQUIRED)
 
 add_executable(Uniclip uniclip.cpp
-        Utils/Server/Server.cpp
-        Utils/Server/Server.h
+        Utils/Network/Network.cpp
+        Utils/Network/Network.h
         Utils/Clipboard/Clipboard.cpp
         Utils/Clipboard/Clipboard.h
         Utils/Client/Client.cpp

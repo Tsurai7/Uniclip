@@ -46,6 +46,7 @@ int decompressData(const char *input, size_t inputSize, char **output, size_t *o
     stream.next_out = (unsigned char *)(*output);
 
     int result = inflate(&stream, Z_FINISH);
+
     if (result != Z_STREAM_END) {
         inflateEnd(&stream);
         free(*output);

@@ -9,4 +9,4 @@
 int compressData(const char *input, size_t inputSize, char **output, size_t *outputSize);
 int decompressData(const char *input, size_t inputSize, char **output, size_t *outputSize);
 
-#endif //UNICLIP_DATA_H
+#endif

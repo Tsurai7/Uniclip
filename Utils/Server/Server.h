@@ -1,5 +1,0 @@
-#ifndef UNICLIP_SERVER_H
-#define UNICLIP_SERVER_H
-
-
-#endif //UNICLIP_SERVER_H

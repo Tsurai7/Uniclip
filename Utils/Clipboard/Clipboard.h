@@ -10,4 +10,4 @@ std::string runGetClipCommand();
 void runSetClipCommand(const char* text);
 
 
-#endif //UNICLIP_CLIPBOARD_H
+#endif
