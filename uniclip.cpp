@@ -21,15 +21,17 @@ void* handleClip(void* arg) {
             sendBroadcast(localClip.c_str());
         }
 
-        sleep(1);
+        //sleep(1);
     }
 }
+
 
 void* handleBroadcast(void* arg) {
     char* text;
     receiveBroadcast(&text);
     runSetClipCommand(text);
 }
+
 
 int main(int argc, char* argv[]) {
     //sendBroadcast("hiiiii");

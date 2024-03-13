@@ -1,6 +1,7 @@
 #include "Network.h"
 
 #define BROADCAST_PORT 8787
+#define RECEIVE_PORT 8888
 #define BROADCAST_ADDRESS "192.168.1.255"
 
 
@@ -57,7 +58,7 @@ void receiveBroadcast(char** text) {
     memset(&server_address, 0, sizeof(server_address));
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
-    server_address.sin_port = htons(BROADCAST_PORT);
+    server_address.sin_port = htons(RECEIVE_PORT);
 
     // Привязка сокета к адресу
     if (bind(socket_fd, (const struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
