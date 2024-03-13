@@ -31,7 +31,7 @@ void* handleBroadcast(void* arg) {
     runSetClipCommand(text);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     //sendBroadcast("hiiiii");
 
     // runSetClipCommand("hi");
@@ -71,24 +71,22 @@ int main() {
     pthread_t thread1, thread2;
 
     if (pthread_create(&thread1, NULL, handleClip, NULL) != 0) {
-        perror("Thread 1 creation failed");
+        printf("Thread 1 creation failed");
         return 1;
     }
 
     if (pthread_create(&thread2, NULL, handleBroadcast, NULL) != 0) {
-        perror("Thread 2 creation failed");
+        printf("Thread 2 creation failed");
         return 1;
     }
 
-    // Ожидание завершения потока 1
     if (pthread_join(thread1, NULL) != 0) {
-        perror("Thread 1 join failed");
+        printf("Thread 1 join failed");
         return 1;
     }
 
-    // Ожидание завершения потока 2
     if (pthread_join(thread2, NULL) != 0) {
-        perror("Thread 2 join failed");
+        printf("Thread 2 join failed");
         return 1;
     }
 
