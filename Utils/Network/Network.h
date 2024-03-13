@@ -12,4 +12,4 @@
 void sendBroadcast(const char* message);
 void receiveBroadcast();
 
-#endif //UNICLIP_NETWORK_H
+#endif

@@ -1,13 +1,11 @@
 #include <iostream>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "Utils/Clipboard/Clipboard.h"
 #include "Utils/Network/Network.h"
-#include "Utils/Data/Data.h"
 #include "Utils/Crypto/Crypto.h"
-
-#define BROADCAST_PORT 8787
-#define BROADCAST_ADDRESS "192.168.1.255"
+#include "Utils/Data/Data.h"
 
 using namespace std;
 

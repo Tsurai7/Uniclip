@@ -11,5 +11,4 @@ void setClipCommand(const char* command, string text);
 string runGetClipCommand();
 void runSetClipCommand(char* text);
 
-
 #endif
