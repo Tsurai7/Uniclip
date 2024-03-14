@@ -4,9 +4,9 @@
 #include <string>
 
 std::string getClipCommand(const char* command);
-void setClipCommand(const char* command, std::string text);
+void setClipCommand(const char* command, const char* text);
 
 std::string runGetClipCommand();
-void runSetClipCommand(char* text);
+void runSetClipCommand(const char* text);
 
 #endif

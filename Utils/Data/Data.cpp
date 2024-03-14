@@ -1,13 +1,16 @@
 #include "Data.h"
 
+#include <string.h>
+#include <zlib.h>
 
-int compressData(const char *input, size_t inputSize, char **output, size_t *outputSize) {
+void compressData(const char *input, size_t inputSize, char **output, size_t *outputSize) {
+
     z_stream stream;
     memset(&stream, 0, sizeof(stream));
 
     // Initialize compression stream with best compression level
     if (deflateInit(&stream, Z_BEST_COMPRESSION) != Z_OK) {
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     // Allocate memory for output buffer
@@ -19,10 +22,10 @@ int compressData(const char *input, size_t inputSize, char **output, size_t *out
 
 
     int result = deflate(&stream, Z_FINISH);
+
     if (result != Z_STREAM_END) {
         deflateEnd(&stream);
-        free(*output);
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     // Store compressed data size
@@ -30,18 +33,17 @@ int compressData(const char *input, size_t inputSize, char **output, size_t *out
 
     // Clean up compression stream
     deflateEnd(&stream);
-
-    return 0;
 }
 
 
-int decompressData(const char *input, size_t inputSize, char **output, size_t *outputSize) {
+void decompressData(const char *input, size_t inputSize, char **output, size_t *outputSize) {
+
     z_stream stream;
     memset(&stream, 0, sizeof(stream));
 
     // Initialize decompression stream
     if (inflateInit(&stream) != Z_OK) {
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     // Allocate memory for output buffer
@@ -56,8 +58,7 @@ int decompressData(const char *input, size_t inputSize, char **output, size_t *o
 
     if (result != Z_STREAM_END) {
         inflateEnd(&stream);
-        free(*output);
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     // Store decompressed data size
@@ -65,6 +66,4 @@ int decompressData(const char *input, size_t inputSize, char **output, size_t *o
 
     // Clean up decompression stream
     inflateEnd(&stream);
-
-    return 0;
 }
