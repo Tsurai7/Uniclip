@@ -1,7 +1,8 @@
 #include "Network.h"
+#include "../Clipboard/Clipboard.h"
 
 #define SEND_PORT 8787
-#define RECEIVE_PORT 8484
+#define RECEIVE_PORT 8484 // program cant send info to all users in network with different in/out ports
 #define BROADCAST_ADDRESS "255.255.255.255"
 
 
@@ -42,6 +43,7 @@ void sendBroadcast(const char *message) {
     close(socket_fd);
 }
 
+
 void *receiveBroadcast(void *arg) {
     int socket_fd;
     struct sockaddr_in server_address, client_address;
@@ -56,7 +58,7 @@ void *receiveBroadcast(void *arg) {
     memset(&server_address, 0, sizeof(server_address));
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
-    server_address.sin_port = htons(RECEIVE_PORT);
+    server_address.sin_port = htons(SEND_PORT);
 
     // Привязка сокета к адресу
     if (bind(socket_fd, (struct sockaddr *)&server_address, sizeof(server_address)) == -1) {
@@ -80,6 +82,7 @@ void *receiveBroadcast(void *arg) {
             exit(EXIT_FAILURE);
         }
 
+        runSetClipCommand(buffer);
         printf("Received message from %s:%d: %s\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port), buffer);
     }
 

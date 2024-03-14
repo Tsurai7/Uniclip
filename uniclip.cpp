@@ -16,16 +16,14 @@ void* handleClip(void* arg) {
             sendBroadcast(localClip.c_str());
         }
 
-        //sleep(1);
+        sleep(1); // !!!sending extra space without sleep (maybe some troubles with threds)
     }
 }
 int main(int argc, char* argv[]) {
-    string startClip = runGetClipCommand();
-
     pthread_t thread_1, thread_2;
 
     // Создание потока для функции receiveBroadcast
-    if (pthread_create(&thread_1, NULL, receiveBroadcast, NULL) != 0) {
+   if (pthread_create(&thread_1, NULL, receiveBroadcast, NULL) != 0) {
         perror("pthread_create");
         exit(EXIT_FAILURE);
     }
@@ -46,5 +44,9 @@ int main(int argc, char* argv[]) {
         perror("pthread_join");
         exit(EXIT_FAILURE);
     }
+
+
+
+
     return 0;
 }
