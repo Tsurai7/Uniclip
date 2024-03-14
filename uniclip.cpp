@@ -1,9 +1,9 @@
 #include "Utils/Clipboard/Clipboard.h"
 #include "Utils/Network/Network.h"
-#include "Utils/Crypto/Crypto.h"
 #include "Utils/Data/Data.h"
 
 using namespace std;
+
 
 void* handleClip(void* arg) {
     string startClip = runGetClipCommand();
@@ -16,37 +16,37 @@ void* handleClip(void* arg) {
             sendBroadcast(localClip.c_str());
         }
 
-        sleep(1); // !!!sending extra space without sleep (maybe some troubles with threds)
+        sleep(1); // !!! sending extra space without sleep (maybe some troubles with threads)
     }
 }
+
+
 int main(int argc, char* argv[]) {
-    pthread_t thread_1, thread_2;
+    pthread_t recieveBroadcastThread, handleClipThread;
 
-    // Создание потока для функции receiveBroadcast
-   if (pthread_create(&thread_1, NULL, receiveBroadcast, NULL) != 0) {
-        perror("pthread_create");
+    // Creating thread for func
+    if (pthread_create(&recieveBroadcastThread, NULL, receiveBroadcast, NULL) != 0) {
+        printf("recieveBroadcastThread_create");
         exit(EXIT_FAILURE);
     }
 
-    if (pthread_create(&thread_2, NULL, handleClip, NULL) != 0) {
-        perror("pthread_create");
+    // Creating thread for func
+    if (pthread_create(&handleClipThread, NULL, handleClip, NULL) != 0) {
+        printf("handleClipThread_create");
         exit(EXIT_FAILURE);
     }
 
-    // Ожидание завершения потока
-    if (pthread_join(thread_1, NULL) != 0) {
-        perror("pthread_join");
+    // Waiting for thread ending
+    if (pthread_join(recieveBroadcastThread, NULL) != 0) {
+        printf("recieveBroadcastThread_join");
         exit(EXIT_FAILURE);
     }
 
-    // Ожидание завершения потока
-    if (pthread_join(thread_2, NULL) != 0) {
-        perror("pthread_join");
+    // Waiting for thread ending
+    if (pthread_join(handleClipThread, NULL) != 0) {
+        printf("handleClipThread_join");
         exit(EXIT_FAILURE);
     }
-
-
-
 
     return 0;
 }

@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-using namespace std;
 
 std::string runGetClipCommand() {
     #ifdef __APPLE__
@@ -51,7 +50,7 @@ std::string getClipCommand(const char* command) {
     return result;
 }
 
-void setClipCommand(const char* command, string text) {
+void setClipCommand(const char* command, std::string text) {
     FILE *pipe = popen(command, "w");
 
     if (!pipe) {
