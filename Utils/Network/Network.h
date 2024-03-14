@@ -8,8 +8,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-
 void sendBroadcast(const char* message);
-void receiveBroadcast(char** text);
+void *receiveBroadcast(void *arg);
 
 #endif

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <zlib.h>
 
+
 int compressData(const char *input, size_t inputSize, char **output, size_t *outputSize);
 int decompressData(const char *input, size_t inputSize, char **output, size_t *outputSize);
 

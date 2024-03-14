@@ -1,5 +1,9 @@
 #include "Clipboard.h"
 
+#include <iostream>
+
+using namespace std;
+
 std::string runGetClipCommand() {
     #ifdef __APPLE__
         return getClipCommand("pbpaste");
