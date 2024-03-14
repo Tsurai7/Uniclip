@@ -20,7 +20,7 @@ void runSetClipCommand(char* text) {
     #ifdef __APPLE__
         return setClipCommand("pbcopy", text);
     #elif __linux__
-        return setClipCommand(xclip -selection clipboard", text);
+        return setClipCommand("xclip -selection clipboard", text);
     #elif _WIN32
         return setClipCommand(powershell.exe -command -clip", text);
     #else
