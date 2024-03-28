@@ -1,7 +1,5 @@
 #include "Clipboard.h"
 
-#include <iostream>
-
 
 std::string runGetClipCommand() {
     #ifdef __APPLE__
@@ -15,7 +13,8 @@ std::string runGetClipCommand() {
     #endif
 }
 
-void runSetClipCommand(char* text) {
+
+void runSetClipCommand(const char* text) {
     #ifdef __APPLE__
         return setClipCommand("pbcopy", text);
     #elif __linux__
@@ -23,9 +22,10 @@ void runSetClipCommand(char* text) {
     #elif _WIN32
         return setClipCommand(powershell.exe -command -clip", text);
     #else
-        return;
+        exit(EXIT_FAILURE);
     #endif
 }
+
 
 std::string getClipCommand(const char* command) {
     char buffer[1024];
@@ -43,29 +43,29 @@ std::string getClipCommand(const char* command) {
 
     int status = pclose(pipe);
 
-    if (status == -1) {
-        return "Error closing pipe!" ;
+    if (status < 0) {
+        return "Error closing pipe!";
     }
 
     return result;
 }
 
-void setClipCommand(const char* command, std::string text) {
+
+void setClipCommand(const char* command, const char* text) {
+
     FILE *pipe = popen(command, "w");
 
     if (!pipe) {
-        std::cerr << "Ошибка при открытии потока для команды pbcopy" << std::endl;
-        return;
+        printf("Ошибка при открытии потока для команды pbcopy\n");
+        exit(EXIT_FAILURE);
     }
 
-    fprintf(pipe, "%s", text.c_str());
+    fprintf(pipe, "%s", text);
 
     int status = pclose(pipe);
 
-    if (status == -1) {
-        std::cerr << "Ошибка при закрытии потока для команды pbcopy" << std::endl;
-        return;
+    if (status < 0) {
+        printf("Ошибка при закрытии потока для команды pbcopy\n");
+        exit(EXIT_FAILURE);
     }
-
-    return;
 }

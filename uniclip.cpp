@@ -1,15 +1,16 @@
 #include "Utils/Clipboard/Clipboard.h"
 #include "Utils/Network/Network.h"
+#include "Utils/Crypto/Crypto.h"
 #include "Utils/Data/Data.h"
-
-using namespace std;
+#include "iostream"
+#include <unistd.h>
 
 
 void* handleClip(void* arg) {
-    string startClip = runGetClipCommand();
+    std::string startClip = runGetClipCommand();
 
     while (1) {
-        string localClip = runGetClipCommand();
+        std::string localClip = runGetClipCommand();
 
         if (localClip != startClip) {
             startClip = localClip;
@@ -22,6 +23,7 @@ void* handleClip(void* arg) {
 
 
 int main(int argc, char* argv[]) {
+
     pthread_t recieveBroadcastThread, handleClipThread;
 
     // Creating thread for func
@@ -30,11 +32,12 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Creating thread for func
+
     if (pthread_create(&handleClipThread, NULL, handleClip, NULL) != 0) {
         printf("handleClipThread_create");
         exit(EXIT_FAILURE);
     }
+
 
     // Waiting for thread ending
     if (pthread_join(recieveBroadcastThread, NULL) != 0) {
@@ -42,11 +45,12 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Waiting for thread ending
+
     if (pthread_join(handleClipThread, NULL) != 0) {
         printf("handleClipThread_join");
         exit(EXIT_FAILURE);
     }
 
     return 0;
+
 }
