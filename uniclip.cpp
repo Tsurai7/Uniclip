@@ -1,9 +1,11 @@
+#include "Utils/Notifications/Notify.h"
 #include "Utils/Clipboard/Clipboard.h"
 #include "Utils/Network/Network.h"
+#include "Utils/Logging/Logging.h"
 #include "Utils/Crypto/Crypto.h"
 #include "Utils/Data/Data.h"
-#include "Utils/Logging/Logging.h"
 #include <unistd.h>
+
 
 using namespace std;
 
@@ -18,7 +20,6 @@ int main(int argc, char* argv[]) {
                          "Examples:\n"
                          "Running just  'uniclip' will start a new clipboard.\n"
                          "Refer to https://github.com/Tsurai7/Kharashun-Demidovich_OSISP_prj_2024\n";
-
 
     pthread_t receiveBroadcastThread, manageClipThread;
 
@@ -47,4 +48,5 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
+
 }

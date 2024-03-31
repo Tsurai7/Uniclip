@@ -76,6 +76,7 @@ void setClipCommand(const char* command, const char* text) {
     logger("CLIPBOARD SET LOCALLY", text);
 }
 
+
 void* manageClip(void* arg) {
     std::string startClip = "";
 
@@ -89,7 +90,6 @@ void* manageClip(void* arg) {
             logger("CLIPBOARD CHANGED LOCALLY", localClip.c_str());
 
             sendBroadcast(localClip.c_str());
-
         }
 
         sleep(1); // !!! sending extra space without sleep (maybe some troubles with threads)
