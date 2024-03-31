@@ -2,55 +2,49 @@
 #include "Utils/Network/Network.h"
 #include "Utils/Crypto/Crypto.h"
 #include "Utils/Data/Data.h"
-#include "iostream"
+#include "Utils/Logging/Logging.h"
 #include <unistd.h>
 
-
-void* handleClip(void* arg) {
-    std::string startClip = runGetClipCommand();
-
-    while (1) {
-        std::string localClip = runGetClipCommand();
-
-        if (localClip != startClip) {
-            startClip = localClip;
-            sendBroadcast(localClip.c_str());
-        }
-
-        sleep(1); // !!! sending extra space without sleep (maybe some troubles with threads)
-    }
-}
+using namespace std;
 
 
 int main(int argc, char* argv[]) {
 
-    pthread_t recieveBroadcastThread, handleClipThread;
+    logger("NEW SESSION STARTED", "");
+
+    const char* helpMessage = "Uniclip - Universal Clipboard\n"
+                         "With Uniclip, you can copy from one device and paste on another.\n"
+                         "Usage: uniclip  [--key/-k ] [ --debug/-d ] [ --help/-h ]\n"
+                         "Examples:\n"
+                         "Running just  'uniclip' will start a new clipboard.\n"
+                         "Refer to https://github.com/Tsurai7/Kharashun-Demidovich_OSISP_prj_2024\n";
+
+
+    pthread_t receiveBroadcastThread, manageClipThread;
 
     // Creating thread for func
-    if (pthread_create(&recieveBroadcastThread, NULL, receiveBroadcast, NULL) != 0) {
-        printf("recieveBroadcastThread_create");
+    if (pthread_create(&receiveBroadcastThread, NULL, receiveBroadcast, NULL) != 0) {
+        printf("receiveBroadcastThread_create");
         exit(EXIT_FAILURE);
     }
 
-
-    if (pthread_create(&handleClipThread, NULL, handleClip, NULL) != 0) {
-        printf("handleClipThread_create");
+    if (pthread_create(&manageClipThread, NULL, manageClip, NULL) != 0) {
+        printf("manageClipThread_create");
         exit(EXIT_FAILURE);
     }
 
 
     // Waiting for thread ending
-    if (pthread_join(recieveBroadcastThread, NULL) != 0) {
-        printf("recieveBroadcastThread_join");
+    if (pthread_join(receiveBroadcastThread, NULL) != 0) {
+        printf("receiveBroadcastThread_join");
         exit(EXIT_FAILURE);
     }
 
 
-    if (pthread_join(handleClipThread, NULL) != 0) {
-        printf("handleClipThread_join");
+    if (pthread_join(manageClipThread, NULL) != 0) {
+        printf("manageClipThread_join");
         exit(EXIT_FAILURE);
     }
 
     return 0;
-
 }

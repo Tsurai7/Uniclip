@@ -7,7 +7,6 @@
 ### TODO:
 * Implement file transfer
 * Add cmd line args support
-* Logging
 * Clipboard history
 * System notifications
 
@@ -17,6 +16,7 @@
 * Sending clipboard to connected devices
 * Incrypting messages with RSA algorithm (using private and public keys)
 * Data compression using zlib
+* Logging
 * Multithreading
 
 

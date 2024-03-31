@@ -8,5 +8,6 @@ void setClipCommand(const char* command, const char* text);
 
 std::string runGetClipCommand();
 void runSetClipCommand(const char* text);
+void* manageClip(void* arg);
 
 #endif

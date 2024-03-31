@@ -13,6 +13,8 @@ add_executable(Uniclip uniclip.cpp
         Utils/Data/Data.cpp
         Utils/Data/Data.h
         Utils/Crypto/Crypto.cpp
-        Utils/Crypto/Crypto.h)
+        Utils/Crypto/Crypto.h
+        Utils/Logging/Logging.cpp
+        Utils/Logging/Logging.h)
 
 target_link_libraries(Uniclip PRIVATE ZLIB::ZLIB)

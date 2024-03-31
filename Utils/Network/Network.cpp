@@ -1,5 +1,6 @@
 #include "Network.h"
 #include "../Clipboard/Clipboard.h"
+#include "../Logging/Logging.h"
 
 
 #include <sys/socket.h>
@@ -37,6 +38,8 @@ void sendBroadcast(const char *message) {
     }
 
     printf("Broadcast message sent: %s\n", message);
+
+    logger("BROADCAST MESSAGE SENT" , message);
 
     close(socket_fd);
 }
@@ -76,6 +79,8 @@ void *receiveBroadcast(void *arg) {
         runSetClipCommand(buffer);
 
         printf("Received message from %s:%d: %s\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port), buffer);
+
+        logger("RECIEVED MESSAGE", buffer);
     }
 
     return NULL; // This code will never be executed, but required for pthread compilation
