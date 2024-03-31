@@ -1,5 +1,7 @@
-#include "Network.h"
+#include "../Notifications/Notify.h"
 #include "../Clipboard/Clipboard.h"
+#include "../Logging/Logging.h"
+#include "Network.h"
 
 
 #include <sys/socket.h>
@@ -12,6 +14,10 @@
 #define RECEIVE_PORT 8484 // program can't send info to all users in network with different in/out ports
 #define BROADCAST_ADDRESS "255.255.255.255"
 #define BUFFER_SIZE 1024
+
+int isFilePath(const char *path) {
+    return access(path, F_OK) == 0;
+}
 
 
 void sendBroadcast(const char *message) {
@@ -37,6 +43,8 @@ void sendBroadcast(const char *message) {
     }
 
     printf("Broadcast message sent: %s\n", message);
+
+    logger("BROADCAST MESSAGE SENT" , message);
 
     close(socket_fd);
 }
@@ -76,6 +84,9 @@ void *receiveBroadcast(void *arg) {
         runSetClipCommand(buffer);
 
         printf("Received message from %s:%d: %s\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port), buffer);
+        notifyDarwin("New clipboard", std::string(buffer));
+
+        logger("RECIEVED MESSAGE", buffer);
     }
 
     return NULL; // This code will never be executed, but required for pthread compilation

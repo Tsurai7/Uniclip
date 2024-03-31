@@ -1,4 +1,8 @@
 #include "Clipboard.h"
+#include "../Network/Network.h"
+#include "../Logging/Logging.h"
+
+#include <unistd.h>
 
 
 std::string runGetClipCommand() {
@@ -67,5 +71,27 @@ void setClipCommand(const char* command, const char* text) {
     if (status < 0) {
         printf("Ошибка при закрытии потока для команды pbcopy\n");
         exit(EXIT_FAILURE);
+    }
+
+    logger("CLIPBOARD SET LOCALLY", text);
+}
+
+
+void* manageClip(void* arg) {
+    std::string startClip = "";
+
+    while (1) {
+        std::string localClip = runGetClipCommand();
+
+        if (localClip != startClip) {
+
+            startClip = localClip;
+
+            logger("CLIPBOARD CHANGED LOCALLY", localClip.c_str());
+
+            sendBroadcast(localClip.c_str());
+        }
+
+        sleep(1); // !!! sending extra space without sleep (maybe some troubles with threads)
     }
 }

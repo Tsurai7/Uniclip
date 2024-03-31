@@ -8,8 +8,10 @@
 
 using namespace std;
 
-void generateKeys(int p, int q, int &n, int &e, int &d);
-vector<int> encrypt(const string& msg, int e, int n);
-string decrypt(const vector<int>& encryptedMsg, int d, int n);
+std::string rsaDecrypt(const std::string &encryptedText, int privateKey, int modulus);
+std::string rsaEncrypt(const std::string &plainText, int publicKey, int modulus);
+void generateRSAKeys(int* publicKey, int* privateKey, int* modulus);
+
+
 
 #endif
