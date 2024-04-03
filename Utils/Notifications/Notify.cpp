@@ -4,7 +4,7 @@
 
 int notifyDarwin(std::string title, std::string message) {
 
-    std::string appleScriptCommand = "osascript -e 'display notification \"" + message + "\" with title \"" + title + "\"'";
+    std::string appleScriptCommand = "osascript -e 'display notification \"" + message + "\" with title \"" + title + "\" '";
 
     int result = system(appleScriptCommand.c_str());
 

@@ -78,7 +78,7 @@ void setClipCommand(const char* command, const char* text) {
 
 
 void* manageClip(void* arg) {
-    std::string startClip = "";
+    std::string startClip = runGetClipCommand();
 
     while (1) {
         std::string localClip = runGetClipCommand();

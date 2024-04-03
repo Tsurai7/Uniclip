@@ -81,10 +81,12 @@ void *receiveBroadcast(void *arg) {
             exit(EXIT_FAILURE);
         }
 
-        runSetClipCommand(buffer);
+        if (buffer != runGetClipCommand()) {
+            runSetClipCommand(buffer);
+            notifyDarwin("New clipboard", std::string(buffer));
+        }
 
         printf("Received message from %s:%d: %s\n", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port), buffer);
-        notifyDarwin("New clipboard", std::string(buffer));
 
         logger("RECIEVED MESSAGE", buffer);
     }

@@ -23,9 +23,9 @@ void logger(const char* action, const char* message) {
         printf("Error opening log file");
         exit(1);
     }
-
     fseek(file, 0, SEEK_END);
-    fprintf(file, "\n");
+    fprintf(file, "\n\n");
+
 
     fprintf(file, "[%s %s] %s\n%s", __DATE__, __TIME__, action, message);
 
