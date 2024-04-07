@@ -11,6 +11,9 @@
 #include <netdb.h>
 #include <ifaddrs.h>
 #include <cstring>
+#include <net/if.h>
+#include <sys/ioctl.h>
+
 
 #define UPD_PORT 8484
 #define TCP_PORT 8787
@@ -18,7 +21,7 @@
 #define BROADCAST_ADDRESS "255.255.255.255"
 #define BUFFER_SIZE 1024
 
-std::vector<std::string> ConnectedDevices;
+std::unordered_set<std::string> ConnectedDevices;
 
 
 void send_broadcast(const char *message)
@@ -84,18 +87,16 @@ void *recieve_broadcast(void *args)
             exit(EXIT_FAILURE);
         }
 
-        if (buffer != runGetClipCommand()) {
-            runSetClipCommand(buffer);
-            notifyDarwin("New clipboard", std::string(buffer));
-        }
-
-        printf("Received message from %s:%d: %s\n", inet_ntoa(client_address.sin_addr),
+        printf("[UDP] RECIEVED MESSAGE %s:%d: %s\n", inet_ntoa(client_address.sin_addr),
                ntohs(client_address.sin_port), buffer);
 
 
-        ConnectedDevices.push_back(std::string(buffer));
+        if (ConnectedDevices.find(std::string(buffer)) == ConnectedDevices.end() && get_ip_command() != std::string(buffer)) {
+            ConnectedDevices.emplace(std::string(buffer));
+            send_broadcast(get_ip_command().c_str());
+        }
 
-        logger("[UDP} RECIEVED MESSAGE", buffer);
+        logger("[UDP] New device connected: ", buffer);
     }
 
     return NULL; // This code will never be executed, but required for pthread compilation
@@ -122,33 +123,29 @@ struct sockaddr_in set_up_socket_udp(int port, in_addr_t address, int *socket_fd
 }
 
 
-std::string getIPLinux() {
-    FILE *pipe;
-    char buffer[BUFFER_SIZE];
-    char *ip_address = NULL;
+std::string get_ip_linux() {
+    int fd;
+    struct ifreq ifr;
 
-    // Выполнение команды iwconfig и чтение вывода
-    pipe = popen("iwconfig wlan0", "r");
-    if (!pipe) {
-        perror("Ошибка при открытии потока для команды iwconfig");
-        exit(EXIT_FAILURE);
-    }
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    // Поиск строки с IP-адресом
-    while (fgets(buffer, BUFFER_SIZE, pipe) != NULL) {
-        char *address_token = strstr(buffer, "inet addr:");
-        if (address_token != NULL) {
-            ip_address = strtok(address_token + strlen("inet addr:"), " ");
-            break;
-        }
-    }
+    /* I want to get an IPv4 IP address */
+    ifr.ifr_addr.sa_family = AF_INET;
 
-    pclose(pipe);
+    /* I want IP address attached to "eth0" */
+    strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
 
-    return ip_address;
+    ioctl(fd, SIOCGIFADDR, &ifr);
+
+    close(fd);
+
+    /* display result */
+    printf("%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
+
+    return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
 }
 
-std::string getIPMAC()
+std::string get_ip_mac()
 {
     std::string ipAddress;
     struct ifaddrs* ifAddrStruct = nullptr;
@@ -184,19 +181,18 @@ std::string getIPMAC()
 }
 
 
-std::string getIpForOS() {
-#   ifdef __APPLE__
-    return getIPMAC();
-#   elif __linux__
-    return getIPLinux();
-#   endif
+std::string get_ip_command() {
+#ifdef __APPLE__
+    return get_ip_mac();
+#elif __linux__
+    return get_ip_linux();
+#endif
 }
 
 void send_to_all_tcp(const char* message)
 {
-    for (size_t i = 0; i < ConnectedDevices.size(); ++i)
-        send_to_device_tcp(message, ConnectedDevices[i].c_str());
-
+    for (std::string element : ConnectedDevices)
+        send_to_device_tcp(message, element.c_str());
 }
 
 
@@ -246,6 +242,7 @@ void send_to_device_tcp(const char* message, const char* server_address)
     } else {
         // Файл не найден, отправляем текстовое сообщение
         bytes_sent = send(sock, message, strlen(message), 0);
+        printf("[TCP] Send text message: %s\n", message);
         if (bytes_sent != strlen(message)) {
             perror("Ошибка отправки данных");
             exit(EXIT_FAILURE);
@@ -312,7 +309,7 @@ void* set_up_tcp_server(void* args)
             fwrite(buffer, 1, bytes_received, received_file); // Записываем принятые данные в файл
         }
         fclose(received_file);
-        printf("Файл успешно получен и сохранен\n");
+        printf("[TCP] Recieved data: %s\n", buffer);
 
         // Отправляем подтверждение клиенту
         char *message = "Сервер успешно получил файл";
