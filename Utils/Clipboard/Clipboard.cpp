@@ -89,9 +89,41 @@ void* manageClip(void* arg) {
 
             logger("CLIPBOARD CHANGED LOCALLY", localClip.c_str());
 
-            sendBroadcast(localClip.c_str());
+            sendInfoToAllTcp(localClip.c_str());
         }
 
         sleep(1); // !!! sending extra space without sleep (maybe some troubles with threads)
+    }
+}
+
+const char* findFile(const char* fileName) {
+    std::string command = "find /home -name \'" + std::string(fileName) + "\'";
+
+    FILE *pipe = popen(command.c_str(), "r");
+    if (!pipe) {
+        printf("Ошибка при открытии потока для команды find\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    // Считываем результаты поиска
+    char result[1024];
+    fgets(result, sizeof(result), pipe);
+
+    int status = pclose(pipe);
+    if (status < 0) {
+        printf("Ошибка при закрытии потока для команды find\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Обрезаем символ новой строки, который fgets мог добавить
+    char *newline = strchr(result, '\n');
+    if (newline) *newline = '\0';
+
+    // Если файл найден, возвращаем его путь
+    if (result[0] != '\0') {
+        return strdup(result); // Выделяем память под копию строки
+    } else {
+        return NULL; // Если файл не найден, возвращаем NULL
     }
 }

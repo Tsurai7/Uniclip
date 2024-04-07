@@ -10,24 +10,23 @@
 using namespace std;
 
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    pthread_t receiveBroadcastThread, tcpSocketThread, manageClipThread;
 
-    logger("NEW SESSION STARTED", "");
-
-    const char* helpMessage = "Uniclip - Universal Clipboard\n"
-                         "With Uniclip, you can copy from one device and paste on another.\n"
-                         "Usage: uniclip  [--key/-k ] [ --debug/-d ] [ --help/-h ]\n"
-                         "Examples:\n"
-                         "Running just  'uniclip' will start a new clipboard.\n"
-                         "Refer to https://github.com/Tsurai7/Kharashun-Demidovich_OSISP_prj_2024\n";
-
-    pthread_t receiveBroadcastThread, manageClipThread;
+    sendBroadcast(defineLocalEn0Interface());
 
     // Creating thread for func
     if (pthread_create(&receiveBroadcastThread, NULL, receiveBroadcast, NULL) != 0) {
         printf("receiveBroadcastThread_create");
         exit(EXIT_FAILURE);
     }
+
+    if (pthread_create(&tcpSocketThread, NULL, setUpTCPServer, NULL) != 0) {
+        printf("receiveBroadcastThread_create");
+        exit(EXIT_FAILURE);
+    }
+
 
     if (pthread_create(&manageClipThread, NULL, manageClip, NULL) != 0) {
         printf("manageClipThread_create");
