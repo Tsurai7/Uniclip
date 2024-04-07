@@ -191,8 +191,13 @@ std::string get_ip_command() {
 
 void send_to_all_tcp(const char* message)
 {
-    for (std::string element : ConnectedDevices)
+    for (std::string element : ConnectedDevices) {
+        printf("Device: %s\n", element.c_str());
+    }
+
+    for(std::string element : ConnectedDevices) {
         send_to_device_tcp(message, element.c_str());
+    }
 }
 
 
