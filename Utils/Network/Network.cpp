@@ -1,6 +1,7 @@
 #include "../Notifications/Notify.h"
 #include "../Clipboard/Clipboard.h"
 #include "../Logging/Logging.h"
+#include "../Crypto/Crypto.h"
 #include "Network.h"
 
 
@@ -12,6 +13,7 @@
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <unordered_set>
+#include <dirent.h>
 
 
 #define UPD_PORT 8484
@@ -19,6 +21,8 @@
 
 #define BROADCAST_ADDRESS "255.255.255.255"
 #define BUFFER_SIZE 1024
+
+#define PATH "/Users/tsurai/Documents"
 
 std::unordered_set<std::string> ConnectedDevices;
 
@@ -52,7 +56,6 @@ void send_broadcast(const char *message)
 
     close(socket_fd);
 }
-
 
 void *recieve_broadcast(void *args)
 {
@@ -93,9 +96,9 @@ void *recieve_broadcast(void *args)
                ntohs(client_address.sin_port), buffer);
 
 
-        if (ConnectedDevices.find(std::string(buffer)) == ConnectedDevices.end() && get_ip_command() != std::string(buffer))
+        if (ConnectedDevices.find(std::string( inet_ntoa(client_address.sin_addr))) == ConnectedDevices.end() && get_ip_command() != std::string(buffer))
         {
-            ConnectedDevices.emplace(std::string(buffer));
+            ConnectedDevices.emplace(std::string( inet_ntoa(client_address.sin_addr)));
             send_broadcast(get_ip_command().c_str());
         }
     }
@@ -191,17 +194,12 @@ std::string get_ip_command() {
 
 void send_to_all_tcp(const char* message)
 {
-    for (std::string element : ConnectedDevices) {
-        printf("Device: %s\n", element.c_str());
-    }
-
-    for(std::string element : ConnectedDevices) {
-        send_to_device_tcp(message, element.c_str());
-    }
+    for (std::string element : ConnectedDevices)
+        send_to_tcp_handler(message, element.c_str());
 }
 
 
-void send_to_device_tcp(const char* message, const char* server_address)
+void send_text_to_tcp(const char* message, const char* server_address)
 {
     int sock;
     struct sockaddr_in serv_addr;
@@ -231,6 +229,13 @@ void send_to_device_tcp(const char* message, const char* server_address)
     }
 
     // Отправка сообщения на сервер
+    if (send(sock, "[TEXT]", strlen(message), 0) < 0) {
+        perror("Ошибка отправки сообщения");
+        close(sock);
+        return;
+    }
+
+    // Отправка сообщения на сервер
     if (send(sock, message, strlen(message), 0) < 0) {
         perror("Ошибка отправки сообщения");
         close(sock);
@@ -244,6 +249,153 @@ void send_to_device_tcp(const char* message, const char* server_address)
 }
 
 
+void send_file_to_tcp(const char* path, const char* server_address) {
+    // Создание TCP-сокета
+    int sock;
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("Ошибка при создании сокета");
+        return;
+    }
+
+    // Заполнение структуры адреса сервера
+    struct sockaddr_in serv_addr;
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(TCP_PORT);
+    if (inet_pton(AF_INET, server_address, &serv_addr.sin_addr) <= 0) {
+        perror("Некорректный адрес");
+        close(sock);
+        return;
+    }
+
+    // Подключение к серверу
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Ошибка подключения");
+        close(sock);
+        return;
+    }
+
+    // Отправка файла по TCP
+    FILE* file = fopen(path, "rb");
+    if (!file) {
+        perror("Ошибка открытия файла");
+        close(sock);
+        return;
+    }
+
+    char buffer[BUFFER_SIZE];
+    size_t bytes_read;
+    while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
+        if (send(sock, buffer, bytes_read, 0) != bytes_read) {
+            perror("Ошибка отправки данных");
+            close(sock);
+            fclose(file);
+            return;
+        }
+    }
+
+    // Закрытие файла и сокета
+    fclose(file);
+    close(sock);
+}
+
+void send_dir_to_tcp(const char* path, const char* server_address) {
+    // Создание TCP-сокета
+    int sock;
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("Ошибка при создании сокета");
+        return;
+    }
+
+    // Заполнение структуры адреса сервера
+    struct sockaddr_in serv_addr;
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(TCP_PORT);
+    if (inet_pton(AF_INET, server_address, &serv_addr.sin_addr) <= 0) {
+        perror("Некорректный адрес");
+        close(sock);
+        return;
+    }
+
+    // Подключение к серверу
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Ошибка подключения");
+        close(sock);
+        return;
+    }
+
+    // Отправка содержимого директории
+    DIR *dir;
+    struct dirent *entry;
+
+    if ((dir = opendir(path)) != NULL) {
+        while ((entry = readdir(dir)) != NULL) {
+            // Пропускаем "." и ".."
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue;
+
+            // Формируем полный путь к файлу или директории
+            char full_path[PATH_MAX];
+            snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
+
+            // Если это директория, рекурсивно отправляем ее содержимое
+            if (entry->d_type == DT_DIR) {
+                send_dir_to_tcp(full_path, server_address);
+            }
+                // Если это файл, отправляем его содержимое
+            else if (entry->d_type == DT_REG) {
+                send_file_to_tcp(full_path, server_address);
+            }
+        }
+        closedir(dir);
+    } else {
+        // Если не удалось открыть директорию
+        perror("Ошибка открытия директории");
+        close(sock);
+        return;
+    }
+
+    // Закрытие сокета
+    close(sock);
+}
+
+
+void send_to_tcp_handler(const char* data, const char* server_address)
+{
+    MessageType type;
+
+    char* path = find(PATH, data, &type);
+
+    switch (type) {
+        case TEXT_MESSAGE:
+            send_text_to_tcp(data, server_address);
+            break;
+        case FILE_MESSAGE:
+            send_file_to_tcp(data, server_address);
+            break;
+        case DIRECTORY_MESSAGE:
+            send_dir_to_tcp(data, server_address);
+            break;
+        default:
+            printf("Error: unknown message type\n");
+            break;
+    }
+}
+
+void handleText(char* data) {
+
+}
+
+void handleFile() {
+
+}
+
+void handleDir() {
+
+}
+
+
 void* run_tcp_server(void *args)
 {
     int server_fd, new_socket;
@@ -254,7 +406,7 @@ void* run_tcp_server(void *args)
     // Создаем TCP сокет
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("Ошибка при создании сокета");
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     // Заполняем структуру адреса
@@ -265,36 +417,58 @@ void* run_tcp_server(void *args)
     // Связываем сокет с локальным адресом
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         perror("Ошибка при привязке сокета");
-        exit(EXIT_FAILURE);
+        close(server_fd);
+        return NULL;
     }
 
     // Переводим сокет в режим прослушивания
     if (listen(server_fd, 3) < 0) {
         perror("Ошибка при прослушивании");
-        exit(EXIT_FAILURE);
+        close(server_fd);
+        return NULL;
     }
 
     printf("Сервер запущен на порту %d\n", TCP_PORT);
 
-    while (1) {
+    while (true)
+    {
         printf("Ожидание входящих соединений...\n");
 
         // Принимаем входящее соединение
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
             perror("Ошибка при приеме соединения");
-            exit(EXIT_FAILURE);
+            continue; // Продолжаем слушать входящие соединения
         }
 
         printf("Новое соединение установлено\n");
 
         memset(buffer, 0, BUFFER_SIZE);
         int valread = read(new_socket, buffer, BUFFER_SIZE);
-        printf("Полученные данные: %s\n", buffer);
+        printf("Заголовок: %s\n", buffer);
+
+        if (strstr(buffer, "[TEXT]") != NULL) {
+            // Обработка текстового сообщения
+            handleText(buffer);
+            // Ожидаем ещё одно сообщение
+            memset(buffer, 0, BUFFER_SIZE);
+            valread = read(new_socket, buffer, BUFFER_SIZE);
+            printf("Полученные данные: %s\n", buffer);
+        } else if (strstr(buffer, "[FILE]") != NULL) {
+            // Обработка сообщения с файлом
+            handleFile();
+        } else if (strstr(buffer, "[DIR]") != NULL) {
+            // Обработка сообщения с директорией
+            handleDir();
+        } else {
+            // Неизвестный тип сообщения
+            printf("Неизвестный тип сообщения: %s\n", buffer);
+        }
 
         // Закрываем соединение
         close(new_socket);
     }
 
-    // Закрываем серверный сокет
+    // Не достигаем этой точки, так как цикл while бесконечен
     close(server_fd);
+    return NULL;
 }

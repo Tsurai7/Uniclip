@@ -12,9 +12,15 @@ struct sockaddr_in set_up_udp_socket(int port, in_addr_t address, int *socket_fd
 
 void send_to_all_tcp(const char* message);
 
-void send_to_device_tcp(const char* message, const char* server_address);
+void send_to_tcp(const char* message, const char* server_address);
 
 void* run_tcp_server(void* args);
+
+void send_to_tcp_handler(const char* data, const char* server_address);
+
+void send_file_to_tcp(const char* message, const char* server_address);
+
+void send_dir_to_tcp(const char* message, const char* server_address);
 
 std::string get_ip_mac();
 

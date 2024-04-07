@@ -48,4 +48,6 @@ int main(int argc, char* argv[])
 
     return 0;
 
+    //printf("%s", find("/Users/tsurai/Documents", "EHU", &hihi));
+
 }

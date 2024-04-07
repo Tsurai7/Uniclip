@@ -98,6 +98,6 @@ void* manage_clip(void* arg)
             send_to_all_tcp(localClip.c_str());
         }
 
-        sleep(1); // !!! sending extra space without sleep (maybe some troubles with threads)
+        //sleep(1); // !!! sending extra space without sleep (maybe some troubles with threads)
     }
 }
