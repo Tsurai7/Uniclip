@@ -8,9 +8,6 @@
 
 using namespace std;
 
-std::string rsaDecrypt(const std::string &encryptedText, int privateKey, int modulus);
-std::string rsaEncrypt(const std::string &plainText, int publicKey, int modulus);
-void generateRSAKeys(int* publicKey, int* privateKey, int* modulus);
 
 
 

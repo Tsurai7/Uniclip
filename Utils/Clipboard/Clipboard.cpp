@@ -3,6 +3,7 @@
 #include "../Logging/Logging.h"
 
 #include <unistd.h>
+#include <cstring>
 
 
 std::string runGetClipCommand() {
@@ -89,7 +90,7 @@ void* manageClip(void* arg) {
 
             logger("CLIPBOARD CHANGED LOCALLY", localClip.c_str());
 
-            sendInfoToAllTcp(localClip.c_str());
+            send_to_all_tcp(localClip.c_str());
         }
 
         sleep(1); // !!! sending extra space without sleep (maybe some troubles with threads)

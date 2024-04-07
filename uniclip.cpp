@@ -14,15 +14,15 @@ int main(int argc, char* argv[])
 {
     pthread_t receiveBroadcastThread, tcpSocketThread, manageClipThread;
 
-    sendBroadcast(defineLocalEn0Interface());
+    send_broadcast(define_en0_interface());
 
     // Creating thread for func
-    if (pthread_create(&receiveBroadcastThread, NULL, receiveBroadcast, NULL) != 0) {
+    if (pthread_create(&receiveBroadcastThread, NULL, recieve_broadcast, NULL) != 0) {
         printf("receiveBroadcastThread_create");
         exit(EXIT_FAILURE);
     }
 
-    if (pthread_create(&tcpSocketThread, NULL, setUpTCPServer, NULL) != 0) {
+    if (pthread_create(&tcpSocketThread, NULL, set_up_tcp_server, NULL) != 0) {
         printf("receiveBroadcastThread_create");
         exit(EXIT_FAILURE);
     }
