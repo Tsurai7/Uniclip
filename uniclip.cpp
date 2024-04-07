@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 {
     pthread_t receiveBroadcastThread, tcpSocketThread, manageClipThread;
 
-    send_broadcast(getIpForOS().c_str());
+    send_broadcast(get_ip_command().c_str());
 
     // Creating thread for func
     if (pthread_create(&receiveBroadcastThread, NULL, recieve_broadcast, NULL) != 0) {
@@ -22,13 +22,13 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    if (pthread_create(&tcpSocketThread, NULL, set_up_tcp_server, NULL) != 0) {
+    if (pthread_create(&tcpSocketThread, NULL, run_tcp_server, NULL) != 0) {
         printf("receiveBroadcastThread_create");
         exit(EXIT_FAILURE);
     }
 
 
-    if (pthread_create(&manageClipThread, NULL, manageClip, NULL) != 0) {
+    if (pthread_create(&manageClipThread, NULL, manage_clip, NULL) != 0) {
         printf("manageClipThread_create");
         exit(EXIT_FAILURE);
     }

@@ -4,11 +4,12 @@
 #include <string>
 
 
-std::string getClipCommand(const char* command);
-void setClipCommand(const char* command, const char* text);
-const char* findFile(const char* fileName);
-std::string runGetClipCommand();
-void runSetClipCommand(const char* text);
-void* manageClip(void* arg);
+std::string get_clip_command(const char* command);
+void set_clip_command(const char* command, const char* text);
+
+std::string run_get_clip_command();
+void run_set_clip_command(const char* text);
+
+void* manage_clip(void* arg);
 
 #endif
