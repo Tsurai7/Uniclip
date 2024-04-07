@@ -13,7 +13,7 @@
 #include <cstring>
 
 #define UPD_PORT 8484
-#define TCP_PORT 8484
+#define TCP_PORT 8787
 
 #define BROADCAST_ADDRESS "255.255.255.255"
 #define BUFFER_SIZE 1024
@@ -92,10 +92,8 @@ void *recieve_broadcast(void *args)
         printf("Received message from %s:%d: %s\n", inet_ntoa(client_address.sin_addr),
                ntohs(client_address.sin_port), buffer);
 
-        const char* address = define_en0_interface();
-        
-        if (strcmp(address, buffer) != 0)
-            ConnectedDevices.push_back(std::string(buffer));
+
+        ConnectedDevices.push_back(std::string(buffer));
 
         logger("[UDP} RECIEVED MESSAGE", buffer);
     }
@@ -124,43 +122,74 @@ struct sockaddr_in set_up_socket_udp(int port, in_addr_t address, int *socket_fd
 }
 
 
-char* define_en0_interface()
-{
-    struct ifaddrs *ifaddr, *ifa;
-    int family, s;
-    char host[NI_MAXHOST];
+std::string getIPLinux() {
+    FILE *pipe;
+    char buffer[BUFFER_SIZE];
+    char *ip_address = NULL;
 
-    if (getifaddrs(&ifaddr) == -1) {
-        perror("getifaddrs");
+    // Выполнение команды iwconfig и чтение вывода
+    pipe = popen("iwconfig wlan0", "r");
+    if (!pipe) {
+        perror("Ошибка при открытии потока для команды iwconfig");
         exit(EXIT_FAILURE);
     }
 
-    // Перебираем все сетевые интерфейсы
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr == NULL)
-            continue;
-
-        family = ifa->ifa_addr->sa_family;
-
-        // Проверяем, что это интерфейс AF_INET (IPv4)
-        if (family == AF_INET) {
-            // Проверяем, что это интерфейс en0
-            if (strcmp(ifa->ifa_name, "en0") == 0) {
-                s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-                if (s != 0) {
-                    printf("getnameinfo() failed: %s\n", gai_strerror(s));
-                    exit(EXIT_FAILURE);
-                }
-
-                printf("IP address for en0: %s\n", host);
-                break;
-            }
+    // Поиск строки с IP-адресом
+    while (fgets(buffer, BUFFER_SIZE, pipe) != NULL) {
+        char *address_token = strstr(buffer, "inet addr:");
+        if (address_token != NULL) {
+            ip_address = strtok(address_token + strlen("inet addr:"), " ");
+            break;
         }
     }
 
-    freeifaddrs(ifaddr);
+    pclose(pipe);
 
-    return host;
+    return ip_address;
+}
+
+std::string getIPMAC()
+{
+    std::string ipAddress;
+    struct ifaddrs* ifAddrStruct = nullptr;
+    struct ifaddrs* ifa = nullptr;
+    void* tmpAddrPtr = nullptr;
+
+    getifaddrs(&ifAddrStruct);
+
+    for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next)
+    {
+        if (!ifa->ifa_addr)
+        {
+            continue;
+        }
+
+        // IPv4 and interface name "en0"
+        if (ifa->ifa_addr->sa_family == AF_INET && strcmp(ifa->ifa_name, "en0") == 0)
+        {
+            tmpAddrPtr = &reinterpret_cast<struct sockaddr_in*>(ifa->ifa_addr)->sin_addr;
+            char addressBuffer[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+            ipAddress = std::string(addressBuffer);
+            break;
+        }
+    }
+
+    if (ifAddrStruct != nullptr)
+    {
+        freeifaddrs(ifAddrStruct);
+    }
+
+    return ipAddress;
+}
+
+
+std::string getIpForOS() {
+#   ifdef __APPLE__
+    return getIPMAC();
+#   elif __linux__
+    return getIPLinux();
+#   endif
 }
 
 void send_to_all_tcp(const char* message)

@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 {
     pthread_t receiveBroadcastThread, tcpSocketThread, manageClipThread;
 
-    send_broadcast(define_en0_interface());
+    send_broadcast(getIpForOS().c_str());
 
     // Creating thread for func
     if (pthread_create(&receiveBroadcastThread, NULL, recieve_broadcast, NULL) != 0) {

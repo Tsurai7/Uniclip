@@ -19,5 +19,7 @@ void send_to_device_tcp(const char* message, const char* server_address);
 
 void* set_up_tcp_server(void* args);
 
+std::string getIpForOS();
+
 
 #endif
