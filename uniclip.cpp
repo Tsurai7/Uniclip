@@ -3,7 +3,6 @@
 #include "Utils/Network/Network.h"
 #include "Utils/Logging/Logging.h"
 #include "Utils/Crypto/Crypto.h"
-#include "Utils/Data/Data.h"
 #include <unistd.h>
 
 
@@ -27,12 +26,10 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-
     if (pthread_create(&manageClipThread, NULL, manage_clip, NULL) != 0) {
         printf("manageClipThread_create");
         exit(EXIT_FAILURE);
     }
-
 
     // Waiting for thread ending
     if (pthread_join(receiveBroadcastThread, NULL) != 0) {
@@ -40,14 +37,11 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-
     if (pthread_join(manageClipThread, NULL) != 0) {
         printf("manageClipThread_join");
         exit(EXIT_FAILURE);
     }
 
+    //manage_clip();
     return 0;
-
-    //printf("%s", find("/Users/tsurai/Documents", "EHU", &hihi));
-
 }

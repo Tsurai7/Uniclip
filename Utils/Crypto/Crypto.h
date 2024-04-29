@@ -8,13 +8,5 @@
 
 
 
-enum MessageType {
-    TEXT_MESSAGE,
-    FILE_MESSAGE,
-    DIRECTORY_MESSAGE
-};
-
-char* find(const char *dir_path, const char* entry_name, MessageType *info);
-
 
 #endif

@@ -2,9 +2,12 @@
 
 #include <string.h>
 #include <zlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <iostream>
 
 void compressData(const char *input, size_t inputSize, char **output, size_t *outputSize) {
-
     z_stream stream;
     memset(&stream, 0, sizeof(stream));
 
@@ -37,7 +40,6 @@ void compressData(const char *input, size_t inputSize, char **output, size_t *ou
 
 
 void decompressData(const char *input, size_t inputSize, char **output, size_t *outputSize) {
-
     z_stream stream;
     memset(&stream, 0, sizeof(stream));
 

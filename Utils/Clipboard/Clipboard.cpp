@@ -1,19 +1,23 @@
 #include "Clipboard.h"
 #include "../Network/Network.h"
-#include "../Logging/Logging.h"
-
-#include <unistd.h>
-#include <cstring>
+#include <sys/stat.h>
 
 
-std::string run_get_clip_command()
+data_info run_get_clip_command()
 {
     #ifdef __APPLE__
-        return get_clip_command("pbpaste");
+        std::string clipboard = get_clip_command("pbpaste").Data;
+        if (std::count_if( clipboard.begin(),clipboard.end(), [=](char c){ return c == '/'; }) >= 1) {
+            return get_clip_command("osascript -e 'get POSIX path of (the clipboard as «class furl»)'");
+        }
+        else {
+            get_clip_command("pbpaste");
+        }
+        return get_clip_command("osascript -e 'get POSIX path of (the clipboard as «class furl»)'");
     #elif __linux__
         return get_clip_command("xclip -o");;
     #else
-        return "Error: unknown operating system.\n";
+        return "ERROR: unknown operating system.\n";
     #endif
 }
 
@@ -25,37 +29,59 @@ void run_set_clip_command(const char* text)
     #elif __linux__
         return set_clip_command("xclip -selection clipboard", text);
     #else
-        return "Error: unknown operating system.\n";
+        return "ERROR: unknown operating system.\n";
     #endif
 }
 
 
-std::string get_clip_command(const char* command)
+data_info get_clip_command(const char* command)
 {
+    data_info info;
     char buffer[1024];
-
-    std::string result;
+    std::string clipboard;
 
     FILE* pipe = popen(command, "r");
 
-    if (!pipe)
-    {
-        return "Error opening pipe!";
+    if (!pipe) {
+        printf("ERROR: with opening the pipe to get clip\n");
+        exit(EXIT_FAILURE);
     }
 
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
-    {
-        result += buffer;
-    }
+        clipboard += buffer;
 
     int status = pclose(pipe);
 
-    if (status < 0)
-    {
-        return "Error closing pipe!";
+    if (status < 0) {
+        printf("ERROR: with closing the pipe to get clip\n");
+        exit(EXIT_FAILURE);
     }
 
-    return result;
+    if (strcmp(command, "osascript -e 'get POSIX path of (the clipboard as «class furl»)'") == 0) {
+
+        if(!clipboard.empty())
+            clipboard.erase(clipboard.length() - 1);
+
+        struct stat path_stat;
+        stat(clipboard.c_str(), &path_stat);
+
+        if (S_ISREG(path_stat.st_mode)) {
+            info.Type = File;
+            info.FilePath = clipboard;
+            info.FileName = clipboard.substr(clipboard.find_last_of('/') + 1);
+        }
+
+        else {
+            info.Type = Text;
+            info.Data = clipboard.substr(clipboard.find_last_of('/') + 1);
+            info.FileName = "";
+            info.FilePath = "";
+        }
+    }
+    else {
+        info.Data = clipboard;
+    }
+    return info;
 }
 
 
@@ -64,7 +90,7 @@ void set_clip_command(const char* command, const char* text)
     FILE *pipe = popen(command, "w");
 
     if (!pipe) {
-        printf("Ошибка при открытии потока для команды pbcopy\n");
+        printf("ERROR: with opening the pipe for pbcopy\n");
         exit(EXIT_FAILURE);
     }
 
@@ -73,31 +99,23 @@ void set_clip_command(const char* command, const char* text)
     int status = pclose(pipe);
 
     if (status < 0) {
-        printf("Ошибка при закрытии потока для команды pbcopy\n");
+        printf("ERROR: with closing the pipe for pbcopy\n");
         exit(EXIT_FAILURE);
     }
-
-    logger("CLIPBOARD SET LOCALLY", text);
 }
 
 
-void* manage_clip(void* arg)
+void* manage_clip(void* args)
 {
-    std::string startClip = run_get_clip_command();
+    data_info startClip;
 
-    while (true)
-    {
-        std::string localClip = run_get_clip_command();
+    while (true) {
+        data_info localClip = run_get_clip_command();
 
-        if (localClip != startClip)
-        {
+        if (localClip.Data != startClip.Data) {
             startClip = localClip;
 
-            logger("CLIPBOARD CHANGED LOCALLY", localClip.c_str());
-
-            send_to_all_tcp(localClip.c_str());
+            send_to_all_tcp(localClip);
         }
-
-        //sleep(1); // !!! sending extra space without sleep (maybe some troubles with threads)
     }
 }
