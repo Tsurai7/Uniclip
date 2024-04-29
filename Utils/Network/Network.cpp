@@ -1,4 +1,5 @@
 #include "../Clipboard/Clipboard.h"
+#include "../Notifications/Notify.h"
 #include "Network.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -26,19 +27,17 @@ void send_broadcast(const char *message)
     int broadcast_enable = 1;
     int setOptions = setsockopt(socket_fd, SOL_SOCKET, SO_BROADCAST, &broadcast_enable, sizeof(broadcast_enable));
 
-    if (setOptions < 0)
-    {
-        printf("Error: Setsockopt failed");
+    if (setOptions < 0) {
+        perror("Error: Setsockopt failed");
         close(socket_fd);
         exit(EXIT_FAILURE);
     }
 
     int sendMessage = sendto(socket_fd, message, strlen(message), 0, (struct sockaddr *) &broadcast_addr,
-                             sizeof(broadcast_addr));
+            sizeof(broadcast_addr));
 
-    if (sendMessage < 0)
-    {
-        printf("Error: Sendto failed");
+    if (sendMessage < 0) {
+        perror("Error: Sendto failed");
         close(socket_fd);
         exit(EXIT_FAILURE);
     }
@@ -48,38 +47,32 @@ void send_broadcast(const char *message)
     close(socket_fd);
 }
 
-void *recieve_broadcast(void *args)
-{
+void *recieve_broadcast(void *args) {
+
     //ConnectedDevices.emplace("127.0.0.1");
     int socket_fd, binding;
 
     struct sockaddr_in client_address{};
     struct sockaddr_in server_address = set_up_udp_socket(UPD_PORT, INADDR_ANY, &socket_fd);
 
-    // Binding socket to address
     binding = bind(socket_fd, (struct sockaddr *) &server_address, sizeof(server_address));
 
-    if (binding < 0)
-    {
-        printf("Error: bind failed");
+    if (binding < 0) {
+        perror("Error binding to socket");
         close(socket_fd);
         exit(EXIT_FAILURE);
     }
 
-    printf("[UDP] Listening for broadcasts...\n");
+    printf("[UDP] Listening for broadcasts on port: %d\n", UPD_PORT);
 
-    while (true)
-    {
+    while (true) {
         char buffer[BUFFER_SIZE] = {0};
         socklen_t client_len = sizeof(client_address);
 
-        // Getting message from client
-        ssize_t recv_len = recvfrom(socket_fd, buffer, sizeof(buffer), 0, (struct sockaddr *) &client_address,
-                                    &client_len);
+        ssize_t recv_len = recvfrom(socket_fd, buffer, sizeof(buffer), 0, (struct sockaddr *) &client_address, &client_len);
 
-        if (recv_len < 0)
-        {
-            printf("Error: receive failed");
+        if (recv_len < 0) {
+            perror("Error: receive failed");
             close(socket_fd);
             exit(EXIT_FAILURE);
         }
@@ -88,8 +81,8 @@ void *recieve_broadcast(void *args)
                ntohs(client_address.sin_port), buffer);
 
 
-        if (ConnectedDevices.find(std::string( inet_ntoa(client_address.sin_addr))) == ConnectedDevices.end() && get_ip_command() != std::string(buffer))
-        {
+        if (ConnectedDevices.find(std::string( inet_ntoa(client_address.sin_addr))) == ConnectedDevices.end()
+            && get_ip_command() != std::string(buffer)) {
             ConnectedDevices.emplace(std::string( inet_ntoa(client_address.sin_addr)));
             send_broadcast(get_ip_command().c_str());
         }
@@ -97,16 +90,14 @@ void *recieve_broadcast(void *args)
 }
 
 
-struct sockaddr_in set_up_udp_socket(int port, in_addr_t address, int *socket_fd)
-{
+struct sockaddr_in set_up_udp_socket(int port, in_addr_t address, int *socket_fd) {
     struct sockaddr_in socket_address;
     memset(&socket_address, 0, sizeof(socket_address));
 
     *socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    if (*socket_fd < 0)
-    {
-        printf("ERROR: socket creation");
+    if (*socket_fd < 0) {
+        perror("ERROR: socket creation");
         exit(EXIT_FAILURE);
     }
 
@@ -118,8 +109,7 @@ struct sockaddr_in set_up_udp_socket(int port, in_addr_t address, int *socket_fd
 }
 
 
-std::string get_ip_linux()
-{
+std::string get_ip_linux() {
     int fd;
     struct ifreq ifr;
 
@@ -139,8 +129,7 @@ std::string get_ip_linux()
 }
 
 
-std::string get_ip_mac()
-{
+std::string get_ip_mac() {
     std::string ipAddress;
     struct ifaddrs* ifAddrStruct = nullptr;
     struct ifaddrs* ifa = nullptr;
@@ -148,13 +137,11 @@ std::string get_ip_mac()
 
     getifaddrs(&ifAddrStruct);
 
-    for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next)
-    {
+    for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr)
             continue;
 
-        if (ifa->ifa_addr->sa_family == AF_INET && strcmp(ifa->ifa_name, "en0") == 0)
-        {
+        if (ifa->ifa_addr->sa_family == AF_INET && strcmp(ifa->ifa_name, "en0") == 0) {
             tmpAddrPtr = &reinterpret_cast<struct sockaddr_in*>(ifa->ifa_addr)->sin_addr;
             char addressBuffer[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
@@ -179,24 +166,20 @@ std::string get_ip_command() {
 }
 
 
-void send_to_all_tcp(data_info info)
-{
-    ConnectedDevices.emplace("127.0.0.1");
+void send_to_all_tcp(data_info info) {
     for (std::string element : ConnectedDevices)
         send_to_tcp_handler(info, element.c_str());
 }
 
 
-struct sockaddr_in set_up_tcp_socket(int port, in_addr_t address, int *socket_fd)
-{
+struct sockaddr_in set_up_tcp_socket(int port, in_addr_t address, int *socket_fd) {
     struct sockaddr_in socket_address;
     memset(&socket_address, 0, sizeof(socket_address));
 
     *socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    if (*socket_fd < 0)
-    {
-        printf("ERROR: socket creation");
+    if (*socket_fd < 0) {
+        perror("ERROR: socket creation");
         exit(EXIT_FAILURE);
     }
 
@@ -208,15 +191,14 @@ struct sockaddr_in set_up_tcp_socket(int port, in_addr_t address, int *socket_fd
 }
 
 
-void send_text_to_tcp(const char* message, const char* server_address)
-{
+void send_text_to_tcp(const char* message, const char* server_address) {
     int sock;
     struct sockaddr_in serv_addr;
     char buffer[BUFFER_SIZE];
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Ошибка при создании сокета");
-        return;
+        perror("ERROR: socket creation");
+        exit(EXIT_FAILURE);;
     }
 
     memset(&serv_addr, 0, sizeof(serv_addr));
@@ -224,29 +206,29 @@ void send_text_to_tcp(const char* message, const char* server_address)
     serv_addr.sin_port = htons(TCP_PORT);
 
     if (inet_pton(AF_INET, server_address, &serv_addr.sin_addr) <= 0) {
-        printf("Incorrect address");
+        perror("Incorrect address");
         close(sock);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         perror("Connection error");
         close(sock);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     if (send(sock, "[TEXT]", strlen("[TEXT]"), 0) < 0) {
         perror("Sending error");
         close(sock);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     sleep(1);
 
     if (send(sock, message, strlen(message), 0) < 0) {
-        perror("Ошибка отправки сообщения");
+        perror("Message sending error");
         close(sock);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     printf("Message sent: %s\n", message);
@@ -255,12 +237,12 @@ void send_text_to_tcp(const char* message, const char* server_address)
 }
 
 
-void send_file_to_tcp(data_info info, const char* server_address)
-{
+void send_file_to_tcp(data_info info, const char* server_address) {
     int sock;
+
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Error creating socket");
-        return;
+        exit(EXIT_FAILURE);
     }
 
     struct sockaddr_in serv_addr;
@@ -269,29 +251,29 @@ void send_file_to_tcp(data_info info, const char* server_address)
     serv_addr.sin_port = htons(TCP_PORT);
 
     if (inet_pton(AF_INET, server_address, &serv_addr.sin_addr) <= 0) {
-        perror("Некорректный адрес");
+        perror("Incorrect address");
         close(sock);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-        perror("Ошибка подключения");
+        perror("Connection error");
         close(sock);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     if (send(sock, "[FILE]", strlen("[FILE]"), 0) < 0) {
-        perror("Ошибка отправки сообщения");
+        perror("Sending file error");
         close(sock);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     sleep(1);
 
     if (send(sock, info.FileName.c_str(), strlen(info.FileName.c_str()), 0) < 0) {
-        perror("Ошибка отправки сообщения");
+        perror("Sending file name error");
         close(sock);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     sleep(1);
@@ -299,19 +281,19 @@ void send_file_to_tcp(data_info info, const char* server_address)
     FILE* file = fopen(info.FilePath.c_str(), "rb");
 
     if (!file) {
-        perror("Ошибка открытия файла");
+        perror("Opening file error");
         close(sock);
-        return;
+        exit(EXIT_FAILURE);
     }
 
     char buffer[BUFFER_SIZE];
     size_t bytes_read;
     while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
         if (send(sock, buffer, bytes_read, 0) != bytes_read) {
-            perror("Ошибка отправки данных");
+            perror("Sending data error");
             close(sock);
             fclose(file);
-            return;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -337,25 +319,24 @@ void send_to_tcp_handler(data_info info, const char* server_address) {
 }
 
 
-std::string recieve_text_tcp(int socket)
-{
+std::string recieve_text_tcp(int socket) {
     char text[BUFFER_SIZE];
     memset(text, 0, BUFFER_SIZE);
 
     int valread = read(socket, text, BUFFER_SIZE);
 
-    printf("Полученный текст: %s\n", text);
+    printf("Recieved text: %s\n", text);
+    notify("New clip: text", text);
 
     return text;
 }
 
 
-void recieve_file_tcp(int socket, const char* filename)
-{
+void recieve_file_tcp(int socket, const char* filename) {
     FILE* file = fopen(filename, "wb");
 
     if (file == NULL) {
-        perror("Ошибка при открытии файла");
+        perror("Error opening file");
         exit(1);
     }
 
@@ -365,39 +346,39 @@ void recieve_file_tcp(int socket, const char* filename)
     do {
         memset(buffer, 0, BUFFER_SIZE);
         bytes_received = read(socket, buffer, BUFFER_SIZE);
+
         if (bytes_received < 0) {
-            perror("Ошибка при чтении данных из сокета");
+            perror("Error recieving data");
             fclose(file);
             exit(1);
         }
+
         fwrite(buffer, 1, bytes_received, file);
     } while (bytes_received == BUFFER_SIZE);
 
     fclose(file);
-    printf("Файл успешно сохранен\n");
-
+    printf("File successfully saved\n");
 
     char resolved_path[PATH_MAX];
 
     if (realpath(filename, resolved_path) == NULL) {
-        perror("Ошибка при получении пути к файлу");
-        exit(1);
+        perror("Error getting file path");
+        exit(EXIT_FAILURE);
     }
 
     run_set_clip_command(resolved_path);
 }
 
 
-void* run_tcp_server(void* args)
-{
+void* run_tcp_server(void* args) {
     int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE];
 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("Ошибка при создании сокета");
-        return NULL;
+        perror("Error creating socket");
+        exit(EXIT_FAILURE);
     }
 
     address.sin_family = AF_INET;
@@ -405,45 +386,49 @@ void* run_tcp_server(void* args)
     address.sin_port = htons(TCP_PORT);
 
     if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
-        perror("Ошибка при привязке сокета");
+        perror("Error connecting to socket");
         close(server_fd);
-        return NULL;
+        exit(EXIT_FAILURE);
     }
 
     if (listen(server_fd, 3) < 0) {
-        perror("Ошибка при прослушивании");
+        perror("Error listening the socket ");
         close(server_fd);
-        return NULL;
+        exit(EXIT_FAILURE);
     }
 
-    printf("Сервер запущен на порту %d\n", TCP_PORT);
+    printf("Server started on port:  %d\n", TCP_PORT);
 
     while (true) {
-        printf("Ожидание входящих соединений...\n");
+        printf("Waiting for incoming connections...\n");
 
         if ((new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
-            perror("Ошибка при приеме соединения");
+            perror("Establishing connection error");
             continue;
         }
 
-        printf("Новое соединение установлено\n");
+        printf("New connection established\n");
 
         memset(buffer, 0, BUFFER_SIZE);
         int valread = read(new_socket, buffer, BUFFER_SIZE);
-        printf("Заголовок: %s\n", buffer);
+        printf("Header: %s\n", buffer);
 
         if (strstr(buffer, "[TEXT]") != NULL) {
             recieve_text_tcp(new_socket);
         }
+
         else if (strstr(buffer, "[FILE]") != NULL) {
             int newVal = read(new_socket, buffer, BUFFER_SIZE);
 
             std::string name = buffer;
-            printf("Имя файла: %s\n", buffer);
+            printf("File name: %s\n", buffer);
             recieve_file_tcp(new_socket, name.c_str());
+
+            notify("Uniclip", name);
         }
+
          else {
-            printf("Неизвестный тип сообщения: %s\n", buffer);
+            perror("Unknown message type");
         }
 
         close(new_socket);

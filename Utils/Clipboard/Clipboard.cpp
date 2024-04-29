@@ -43,7 +43,7 @@ data_info get_clip_command(const char* command)
     FILE* pipe = popen(command, "r");
 
     if (!pipe) {
-        printf("ERROR: with opening the pipe to get clip\n");
+        perror("ERROR: with opening the pipe to get clip\n");
         exit(EXIT_FAILURE);
     }
 
@@ -53,7 +53,7 @@ data_info get_clip_command(const char* command)
     int status = pclose(pipe);
 
     if (status < 0) {
-        printf("ERROR: with closing the pipe to get clip\n");
+        perror("ERROR: with closing the pipe to get clip\n");
         exit(EXIT_FAILURE);
     }
 
@@ -90,7 +90,7 @@ void set_clip_command(const char* command, const char* text)
     FILE *pipe = popen(command, "w");
 
     if (!pipe) {
-        printf("ERROR: with opening the pipe for pbcopy\n");
+        perror("ERROR: with opening the pipe for pbcopy\n");
         exit(EXIT_FAILURE);
     }
 
@@ -99,7 +99,7 @@ void set_clip_command(const char* command, const char* text)
     int status = pclose(pipe);
 
     if (status < 0) {
-        printf("ERROR: with closing the pipe for pbcopy\n");
+        perror("ERROR: with closing the pipe for pbcopy\n");
         exit(EXIT_FAILURE);
     }
 }

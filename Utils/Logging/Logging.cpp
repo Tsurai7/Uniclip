@@ -2,8 +2,7 @@
 #include <cstdlib>
 #include <unistd.h>
 
-void logger(const char* action, const char* message)
-{
+void logger(const char* action, const char* message) {
     FILE *file;
 
     if (access("log.txt", F_OK) == -1) {
@@ -21,7 +20,7 @@ void logger(const char* action, const char* message)
 
     if (file == NULL) {
         printf("Error opening log file");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     fseek(file, 0, SEEK_END);
