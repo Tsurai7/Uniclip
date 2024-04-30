@@ -6,7 +6,6 @@ void logger(const char* action, const char* message) {
     FILE *file;
 
     if (access("log.txt", F_OK) == -1) {
-
         file = fopen("log.txt", "w");
 
         if (file == NULL) {
@@ -21,11 +20,11 @@ void logger(const char* action, const char* message) {
 
     if (file == NULL) {
         printf("Error opening log file");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
+
     fseek(file, 0, SEEK_END);
     fprintf(file, "\n\n");
-
 
     fprintf(file, "[%s %s] %s\n%s", __DATE__, __TIME__, action, message);
 
