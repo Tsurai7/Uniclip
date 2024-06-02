@@ -1,6 +1,7 @@
 #include "../Clipboard/Clipboard.h"
 #include "../Notifications/Notify.h"
 #include "Network.h"
+#include "../Crypto/Crypto.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -14,10 +15,14 @@
 #define TCP_PORT 8787
 
 #define BROADCAST_ADDRESS "255.255.255.255"
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 1024 * 8
 
 std::unordered_set<std::string> ConnectedDevices;
 
+int p = 61;
+int q = 53;
+
+int publicKey, privateKey, n;
 
 void send_broadcast(const char *message)
 {
@@ -49,7 +54,7 @@ void send_broadcast(const char *message)
 
 void *recieve_broadcast(void *args) {
 
-    //ConnectedDevices.emplace("127.0.0.1");
+    ConnectedDevices.emplace("127.0.0.1");
     int socket_fd, binding;
 
     struct sockaddr_in client_address{};
@@ -158,11 +163,11 @@ std::string get_ip_mac() {
 
 
 std::string get_ip_command() {
-    #ifdef __APPLE__
-        return get_ip_mac();
-    #elif __linux__
-        return get_ip_linux();
-    #endif
+#ifdef __APPLE__
+    return get_ip_mac();
+#elif __linux__
+    return get_ip_linux();
+#endif
 }
 
 
@@ -172,26 +177,11 @@ void send_to_all_tcp(data_info info) {
 }
 
 
-struct sockaddr_in set_up_tcp_socket(int port, in_addr_t address, int *socket_fd) {
-    struct sockaddr_in socket_address;
-    memset(&socket_address, 0, sizeof(socket_address));
-
-    *socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-
-    if (*socket_fd < 0) {
-        perror("ERROR: socket creation");
-        exit(EXIT_FAILURE);
-    }
-
-    socket_address.sin_family = AF_INET;
-    socket_address.sin_addr.s_addr = address;
-    socket_address.sin_port = htons(port);
-
-    return socket_address;
-}
-
-
 void send_text_to_tcp(const char* message, const char* server_address) {
+    generateRSAKeys(p, q, publicKey, privateKey, n);
+
+    std::string encryptedMessage = encryptRSA(message, publicKey, n);
+    printf("Encrypted message: %s\n", encryptedMessage.c_str());
     int sock;
     struct sockaddr_in serv_addr;
     char buffer[BUFFER_SIZE];
@@ -225,7 +215,7 @@ void send_text_to_tcp(const char* message, const char* server_address) {
 
     sleep(1);
 
-    if (send(sock, message, strlen(message), 0) < 0) {
+    if (send(sock, encryptedMessage.c_str(), strlen(encryptedMessage.c_str()), 0) < 0) {
         perror("Message sending error");
         close(sock);
         exit(EXIT_FAILURE);
@@ -325,8 +315,11 @@ std::string recieve_text_tcp(int socket) {
 
     int valread = read(socket, text, BUFFER_SIZE);
 
+    std::string decryptedMessage = decryptRSA(std::string(text), privateKey, n);
+
     printf("Recieved text: %s\n", text);
-    notify("New clip: text", text);
+    printf("Decrypted text: %s\n", decryptedMessage.c_str());
+    notify("Uniclip", "New local clip");
 
     return text;
 }
@@ -424,7 +417,7 @@ void* run_tcp_server(void* args) {
             printf("File name: %s\n", buffer);
             recieve_file_tcp(new_socket, name.c_str());
 
-            notify("Uniclip", name);
+            notify("Uniclip", "New local clip");
         }
 
          else {

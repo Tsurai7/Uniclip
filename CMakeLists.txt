@@ -12,8 +12,6 @@ add_executable(Uniclip uniclip.cpp
         Utils/Network/Network.h
         Utils/Clipboard/Clipboard.cpp
         Utils/Clipboard/Clipboard.h
-        Utils/Data/Data.cpp
-        Utils/Data/Data.h
         Utils/Crypto/Crypto.cpp
         Utils/Crypto/Crypto.h
         Utils/Logging/Logging.cpp

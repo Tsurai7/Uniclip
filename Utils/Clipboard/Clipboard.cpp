@@ -6,14 +6,13 @@
 data_info run_get_clip_command()
 {
     #ifdef __APPLE__
-        std::string clipboard = get_clip_command("pbpaste").Data;
-        if (std::count_if( clipboard.begin(),clipboard.end(), [=](char c){ return c == '/'; }) >= 1) {
+        std::string clipboard = get_clip_command("osascript -e 'get POSIX path of (the clipboard as «class furl»)'").FilePath;
+        if (std::count_if( clipboard.begin(),clipboard.end(), [=](char c){ return c == '/'; }) > 1) {
             return get_clip_command("osascript -e 'get POSIX path of (the clipboard as «class furl»)'");
         }
         else {
-            get_clip_command("pbpaste");
+            return get_clip_command("pbpaste");
         }
-        return get_clip_command("osascript -e 'get POSIX path of (the clipboard as «class furl»)'");
     #elif __linux__
         return get_clip_command("xclip -o");;
     #else
@@ -37,7 +36,7 @@ void run_set_clip_command(const char* text)
 data_info get_clip_command(const char* command)
 {
     data_info info;
-    char buffer[1024];
+    char buffer[8 * 1024];
     std::string clipboard;
 
     FILE* pipe = popen(command, "r");
@@ -79,6 +78,7 @@ data_info get_clip_command(const char* command)
         }
     }
     else {
+        info.Type = Text;
         info.Data = clipboard;
     }
     return info;
