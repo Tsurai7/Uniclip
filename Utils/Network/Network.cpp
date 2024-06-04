@@ -10,8 +10,8 @@
 #include <net/if.h>
 #include <unordered_set>
 
-#define UPD_PORT 98484
-#define TCP_PORT 98787
+#define UPD_PORT 108484
+#define TCP_PORT 108787
 
 #define BROADCAST_ADDRESS "255.255.255.255"
 #define BUFFER_SIZE (1024 * 64)
@@ -26,6 +26,7 @@ int publicKey, privateKey, n;
 
 void send_broadcast(const char *message)
 {
+    ConnectedDevices.emplace(get_ip_command());
     int socket_fd;
     struct sockaddr_in broadcast_addr = set_up_udp_socket(UPD_PORT, inet_addr(BROADCAST_ADDRESS), &socket_fd);
 
@@ -182,6 +183,7 @@ void send_text_to_tcp(const char* message, const char* server_address) {
 
     std::string encryptedMessage = encryptRSA(message, publicKey, n);
     printf("Encrypted message: %s\n", encryptedMessage.c_str());
+
     int sock;
     struct sockaddr_in serv_addr;
     char buffer[BUFFER_SIZE];
@@ -221,14 +223,13 @@ void send_text_to_tcp(const char* message, const char* server_address) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Message sent: %s\n", message);
+    printf("Message sent: %s\n", encryptedMessage.c_str());
 
     close(sock);
 }
 
 void send_file_to_tcp(data_info info, const char* server_address) {
     int sock;
-
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Error creating socket");
         exit(EXIT_FAILURE);
@@ -238,7 +239,6 @@ void send_file_to_tcp(data_info info, const char* server_address) {
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(TCP_PORT);
-
     if (inet_pton(AF_INET, server_address, &serv_addr.sin_addr) <= 0) {
         perror("Incorrect address");
         close(sock);
@@ -256,7 +256,6 @@ void send_file_to_tcp(data_info info, const char* server_address) {
         close(sock);
         exit(EXIT_FAILURE);
     }
-
     sleep(1);
 
     if (send(sock, info.FileName.c_str(), strlen(info.FileName.c_str()), 0) < 0) {
@@ -264,34 +263,51 @@ void send_file_to_tcp(data_info info, const char* server_address) {
         close(sock);
         exit(EXIT_FAILURE);
     }
-
     sleep(1);
 
     FILE* file = fopen(info.FilePath.c_str(), "rb");
-
     if (!file) {
         perror("Opening file error");
         close(sock);
         exit(EXIT_FAILURE);
     }
 
-    char buffer[BUFFER_SIZE];
-    size_t bytes_read;
-    while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
-        if (send(sock, buffer, bytes_read, 0) != bytes_read) {
-            perror("Sending data error");
-            close(sock);
-            fclose(file);
-            exit(EXIT_FAILURE);
-        }
+    fseek(file, 0, SEEK_END);
+    long long file_size = ftell(file);
+    rewind(file);
+
+    auto buffer = (char*)malloc(file_size);
+
+    if (!buffer) {
+        perror("Memory allocation error");
+        fclose(file);
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+
+    size_t bytes_read = fread(buffer, 1, file_size, file);
+
+    if (bytes_read != file_size) {
+        perror("Reading file error");
+        free(buffer);
+        fclose(file);
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+
+    if (send(sock, buffer, file_size, 0) != file_size) {
+        perror("Sending data error");
+        free(buffer);
+        fclose(file);
+        close(sock);
+        exit(EXIT_FAILURE);
     }
 
     printf("File sent\n");
-
+    free(buffer);
     fclose(file);
     close(sock);
 }
-
 
 void send_to_tcp_handler(data_info info, const char* server_address) {
     switch (info.Type) {
@@ -314,6 +330,7 @@ std::string recieve_text_tcp(int socket) {
     int valread = read(socket, text, BUFFER_SIZE);
 
     std::string decryptedMessage = decryptRSA(std::string(text), privateKey, n);
+
     run_set_clip_command(decryptedMessage.c_str());
     printf("Recieved text: %s\n", text);
 
@@ -326,33 +343,39 @@ std::string recieve_text_tcp(int socket) {
 
 void recieve_file_tcp(int socket, const char* filename) {
     FILE* file = fopen(filename, "wb");
-
     if (file == NULL) {
         perror("Error opening file");
         exit(1);
     }
 
     char buffer[BUFFER_SIZE];
-    ssize_t bytes_received;
+    size_t total_bytes_received = 0;
 
-    do {
-        memset(buffer, 0, BUFFER_SIZE);
-        bytes_received = read(socket, buffer, BUFFER_SIZE);
-
+    while (true) {
+        ssize_t bytes_received = read(socket, buffer, BUFFER_SIZE);
         if (bytes_received < 0) {
-            perror("Error recieving data");
+            perror("Error receiving data");
+            fclose(file);
+            exit(1);
+        } else if (bytes_received == 0) {
+            // End of file
+            break;
+        }
+
+        size_t bytes_written = fwrite(buffer, 1, bytes_received, file);
+        if (bytes_written != (size_t)bytes_received) {
+            perror("Error writing to file");
             fclose(file);
             exit(1);
         }
 
-        fwrite(buffer, 1, bytes_received, file);
-    } while (bytes_received == BUFFER_SIZE);
+        total_bytes_received += bytes_received;
+    }
 
     fclose(file);
-    printf("File successfully saved\n");
+    printf("File successfully saved (%lu bytes)\n", total_bytes_received);
 
     char resolved_path[PATH_MAX];
-
     if (realpath(filename, resolved_path) == NULL) {
         perror("Error getting file path");
         exit(EXIT_FAILURE);

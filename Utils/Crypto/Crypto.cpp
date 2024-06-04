@@ -41,7 +41,7 @@ void generateRSAKeys(int p, int q, int& publicKey, int& privateKey, int& n) {
 }
 
 std::string encryptRSA(const std::string& message, int publicKey, int n) {
-    std::string encryptedMessage = "";
+    std::string encryptedMessage;
     for (char c : message) {
         int m = c;
         int encryptedChar = modPow(m, publicKey, n);
@@ -51,8 +51,8 @@ std::string encryptRSA(const std::string& message, int publicKey, int n) {
 }
 
 std::string decryptRSA(const std::string& encryptedMessage, int privateKey, int n) {
-    std::string decryptedMessage = "";
-    std::string encryptedChar = "";
+    std::string decryptedMessage;
+    std::string encryptedChar;
 
     for (char c : encryptedMessage) {
         if (c == ' ') {

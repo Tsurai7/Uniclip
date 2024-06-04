@@ -3,4 +3,4 @@
 
 void logger(const char* action, const char* message);
 
-#endif //UNICLIP_LOGGING_H
+#endif
