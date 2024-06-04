@@ -2,6 +2,7 @@
 #include "../Network/Network.h"
 #include <sys/stat.h>
 
+#define BUFFER_SIZE 1024
 
 data_info run_get_clip_command()
 {
@@ -34,7 +35,7 @@ void run_set_clip_command(const char* text)
 data_info get_clip_command(const char* command)
 {
     data_info info;
-    char buffer[8 * 1024];
+    char buffer[BUFFER_SIZE];
     std::string clipboard;
 
     FILE* pipe = popen(command, "r");
@@ -103,15 +104,16 @@ void set_clip_command(const char* command, const char* text)
 
 void* manage_clip(void* args)
 {
-    data_info startClip;
+    data_info startClip =  run_get_clip_command();
 
     while (true) {
         data_info localClip = run_get_clip_command();
 
-        if (localClip.Data != startClip.Data) {
+        if ((localClip.Data != startClip.Data) || (localClip.FileName != startClip.FileName)) {
             startClip = localClip;
 
             send_to_all_tcp(localClip);
         }
     }
 }
+

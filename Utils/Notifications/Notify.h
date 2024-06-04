@@ -3,6 +3,6 @@
 
 #include <string>
 
-int notify(std::string title, std::string message);
+int Notify(std::string title, std::string message);
 
 #endif //UNICLIP_NOTIFY_H

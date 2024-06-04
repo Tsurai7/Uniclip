@@ -2,7 +2,8 @@
 #include <cstdlib>
 #include <cstdio>
 
-int notify(std::string title, std::string message) {
+int Notify(std::string title, std::string message)
+{
 #ifdef __APPLE__
         std::string appleScriptCommand = "osascript -e 'display notification \"" + message + "\" with title \"" + title + "\" '";
 
