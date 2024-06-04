@@ -26,7 +26,7 @@ int publicKey, privateKey, n;
 
 void send_broadcast(const char *message)
 {
-    ConnectedDevices.emplace(get_ip_command());
+    //ConnectedDevices.emplace(get_ip_command());
     int socket_fd;
     struct sockaddr_in broadcast_addr = set_up_udp_socket(UPD_PORT, inet_addr(BROADCAST_ADDRESS), &socket_fd);
 
@@ -55,6 +55,8 @@ void send_broadcast(const char *message)
 
 void *receive_broadcast(void *args)
 {
+    generateRSAKeys(p, q, publicKey, privateKey, n);
+
     int socket_fd, binding;
 
     struct sockaddr_in client_address{};
@@ -185,8 +187,6 @@ void send_to_all_tcp(data_info info)
 
 void send_text_to_tcp(const char* message, const char* server_address)
 {
-    generateRSAKeys(p, q, publicKey, privateKey, n);
-
     std::string encryptedMessage = encryptRSA(message, publicKey, n);
     printf("Local clip: %s\n", message);
 
@@ -376,6 +376,7 @@ std::string receive_text_tcp(int socket)
     }
 
     std::string decryptedMessage = decryptRSA(std::string(text, text_size), privateKey, n);
+
     run_set_clip_command(decryptedMessage.c_str());
 
     printf("[TCP] Received text: %.*s\n", (int)text_size, text);
@@ -423,14 +424,6 @@ void receive_file_tcp(int socket, const char* filename)
 
     fclose(file);
     printf("[TCP] File successfully received (%lu bytes)\n", total_bytes_received);
-
-    char resolved_path[PATH_MAX];
-    if (realpath(filename, resolved_path) == NULL) {
-        perror("Error getting file path");
-        exit(EXIT_FAILURE);
-    }
-
-    run_set_clip_command(resolved_path);
 }
 
 void* run_tcp_server(void* args)
@@ -499,3 +492,4 @@ void* run_tcp_server(void* args)
         close(new_socket);
     }
 }
+
