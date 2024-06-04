@@ -82,7 +82,7 @@ void *receive_broadcast(void *args)
             exit(EXIT_FAILURE);
         }
 
-        printf("[UDP] RECIEVED MESSAGE %s:%d: %s\n", inet_ntoa(client_address.sin_addr),
+        printf("[UDP] RECIEVED MESSAGE %s:%d from: %s\n", inet_ntoa(client_address.sin_addr),
                ntohs(client_address.sin_port), buffer);
 
 
@@ -170,11 +170,11 @@ std::string get_ip_mac()
 
 std::string get_ip_command()
 {
-#ifdef __APPLE__
-    return get_ip_mac();
-#elif __linux__
-    return get_ip_linux();
-#endif
+    #ifdef __APPLE__
+        return get_ip_mac();
+    #elif __linux__
+        return get_ip_linux();
+    #endif
 }
 
 void send_to_all_tcp(data_info info)
@@ -188,7 +188,7 @@ void send_text_to_tcp(const char* message, const char* server_address)
     generateRSAKeys(p, q, publicKey, privateKey, n);
 
     std::string encryptedMessage = encryptRSA(message, publicKey, n);
-    printf("Encrypted message: %s\n", encryptedMessage.c_str());
+    printf("Local clip: %s\n", message);
 
     int sock;
     struct sockaddr_in serv_addr;
@@ -240,7 +240,7 @@ void send_text_to_tcp(const char* message, const char* server_address)
         exit(EXIT_FAILURE);
     }
 
-    printf("Message sent: %s\n", encryptedMessageBuffer);
+    printf("[TCP] Message sent: %s\n", encryptedMessageBuffer);
 
     free(encryptedMessageBuffer);
     close(sock);
@@ -255,7 +255,7 @@ void send_file_to_tcp(data_info info, const char* server_address)
         exit(EXIT_FAILURE);
     }
 
-    struct sockaddr_in serv_addr;
+    struct sockaddr_in serv_addr{};
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(TCP_PORT);
@@ -327,7 +327,7 @@ void send_file_to_tcp(data_info info, const char* server_address)
         exit(EXIT_FAILURE);
     }
 
-    printf("File sent\n");
+    printf("[TCP] File sent\n");
     free(buffer);
 
     fclose(file);
@@ -378,12 +378,13 @@ std::string receive_text_tcp(int socket)
     std::string decryptedMessage = decryptRSA(std::string(text, text_size), privateKey, n);
     run_set_clip_command(decryptedMessage.c_str());
 
-    printf("Received text: %.*s\n", (int)text_size, text);
-    printf("Decrypted text: %s\n", decryptedMessage.c_str());
+    printf("[TCP] Received text: %.*s\n", (int)text_size, text);
+    printf("New local clip: %s\n", decryptedMessage.c_str());
 
     Notify("Uniclip", "New local clip");
 
     free(text);
+
     return decryptedMessage;
 }
 
@@ -400,6 +401,7 @@ void receive_file_tcp(int socket, const char* filename)
 
     while (true) {
         ssize_t bytes_received = read(socket, buffer, BUFFER_SIZE);
+
         if (bytes_received < 0) {
             perror("Error receiving data");
             fclose(file);
@@ -409,6 +411,7 @@ void receive_file_tcp(int socket, const char* filename)
         }
 
         size_t bytes_written = fwrite(buffer, 1, bytes_received, file);
+
         if (bytes_written != (size_t)bytes_received) {
             perror("Error writing to file");
             fclose(file);
@@ -419,7 +422,7 @@ void receive_file_tcp(int socket, const char* filename)
     }
 
     fclose(file);
-    printf("File successfully saved (%lu bytes)\n", total_bytes_received);
+    printf("[TCP] File successfully received (%lu bytes)\n", total_bytes_received);
 
     char resolved_path[PATH_MAX];
     if (realpath(filename, resolved_path) == NULL) {
@@ -459,17 +462,17 @@ void* run_tcp_server(void* args)
         exit(EXIT_FAILURE);
     }
 
-    printf("Server started on port:  %d\n", TCP_PORT);
+    printf("[TCP] Server started on port: %d\n", TCP_PORT);
 
     while (true) {
-        printf("Waiting for incoming connections...\n");
+        printf("[TCP] Waiting for incoming connections...\n");
 
         if ((new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
             perror("Establishing connection error");
             continue;
         }
 
-        printf("New connection established\n");
+        printf("[TCP] New connection established\n");
 
         memset(buffer, 0, BUFFER_SIZE);
         int valread = read(new_socket, buffer, BUFFER_SIZE);
