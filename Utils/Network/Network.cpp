@@ -10,17 +10,17 @@
 #include <net/if.h>
 #include <unordered_set>
 
-#define UPD_PORT 108484
-#define TCP_PORT 108787
+#define UPD_PORT 98484
+#define TCP_PORT 98787
 
 #define BROADCAST_ADDRESS "255.255.255.255"
-#define BUFFER_SIZE 1024 * 64
+#define BUFFER_SIZE (1024 * 64)
 #define PATH_MAX 256
 
 std::unordered_set<std::string> ConnectedDevices;
 
-int p = 61;
-int q = 53;
+const int p = 61;
+const int q = 53;
 
 int publicKey, privateKey, n;
 

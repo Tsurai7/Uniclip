@@ -109,10 +109,11 @@ void* manage_clip(void* args)
     while (true) {
         data_info localClip = run_get_clip_command();
 
-        if (localClip.Data != startClip.Data) {
+        if ((localClip.Data != startClip.Data) || (localClip.FilePath != startClip.FilePath)) {
             startClip = localClip;
 
             send_to_all_tcp(localClip);
         }
     }
 }
+

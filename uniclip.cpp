@@ -1,6 +1,7 @@
 #include "Utils/Notifications/Notify.h"
 #include "Utils/Clipboard/Clipboard.h"
 #include "Utils/Network/Network.h"
+#include <pthread.h>
 #include <unistd.h>
 
 using namespace std;
