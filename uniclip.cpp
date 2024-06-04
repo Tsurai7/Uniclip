@@ -4,14 +4,12 @@
 #include "Utils/Logging/Logging.h"
 #include "Utils/Crypto/Crypto.h"
 #include <unistd.h>
-#include <iostream>
 
 using namespace std;
 
-
 int main(int argc, char* argv[])
 {
-    /* pthread_t receiveBroadcastThread, tcpSocketThread, manageClipThread;
+    pthread_t receiveBroadcastThread, tcpSocketThread, manageClipThread;
 
     send_broadcast(get_ip_command().c_str());
 
@@ -40,9 +38,9 @@ int main(int argc, char* argv[])
     if (pthread_join(manageClipThread, NULL) != 0) {
         printf("manageClipThread_join");
         exit(EXIT_FAILURE);
-    } */
+    }
 
-    int p = 61;
+    /*int p = 61;
     int q = 53;
     int publicKey, privateKey, n;
     generateRSAKeys(p, q, publicKey, privateKey, n);
@@ -55,7 +53,7 @@ int main(int argc, char* argv[])
     cout << "Decrypted message: " << decryptedMessage << endl;
 
     cout << decryptedMessage.size() << endl;
-    cout << encryptedMessage.size();
+    cout << encryptedMessage.size(); */
 
 
     return 0;

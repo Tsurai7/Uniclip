@@ -12,6 +12,8 @@ void* run_tcp_server(void* args);
 void send_to_tcp_handler(data_info info, const char* server_address);
 void send_file_to_tcp(data_info info, const char* server_address);
 void send_text_to_tcp(const char* message, const char* server_address);
+std::string recieve_text_tcp(int socket);
+void recieve_file_tcp(int socket, const char* filename);
 std::string get_ip_mac();
 std::string get_ip_linux();
 std::string get_ip_command();
