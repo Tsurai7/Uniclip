@@ -1,21 +1,21 @@
 #include "../Clipboard/Clipboard.h"
 #include "../Notifications/Notify.h"
-#include "Network.h"
 #include "../Crypto/Crypto.h"
+#include "Network.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <ifaddrs.h>
 #include <cstring>
 #include <net/if.h>
-#include <sys/ioctl.h>
 #include <unordered_set>
 
-#define UPD_PORT 8484
-#define TCP_PORT 8787
+#define UPD_PORT 108484
+#define TCP_PORT 108787
 
 #define BROADCAST_ADDRESS "255.255.255.255"
 #define BUFFER_SIZE 1024 * 64
+#define PATH_MAX 256
 
 std::unordered_set<std::string> ConnectedDevices;
 
@@ -111,22 +111,30 @@ struct sockaddr_in set_up_udp_socket(int port, in_addr_t address, int *socket_fd
 }
 
 std::string get_ip_linux() {
-    int fd;
-    struct ifreq ifr;
+    std::string localIpAddress;
+    struct ifaddrs* ifAddrStruct = nullptr;
+    struct ifaddrs* ifa = nullptr;
+    void* tmpAddrPtr = nullptr;
 
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    getifaddrs(&ifAddrStruct);
 
-    ifr.ifr_addr.sa_family = AF_INET;
+    for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next) {
+        if (!ifa->ifa_addr)
+            continue;
 
-    strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
+        if (ifa->ifa_addr->sa_family == AF_INET && !(ifa->ifa_flags & IFF_LOOPBACK)) {
+            tmpAddrPtr = &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr;
+            char addressBuffer[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+            localIpAddress = std::string(addressBuffer);
+            break;
+        }
+    }
 
-    ioctl(fd, SIOCGIFADDR, &ifr);
+    if (ifAddrStruct != nullptr)
+        freeifaddrs(ifAddrStruct);
 
-    close(fd);
-
-    printf("%s\n", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
-
-    return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
+    return localIpAddress;
 }
 
 std::string get_ip_mac() {
@@ -180,7 +188,7 @@ void send_text_to_tcp(const char* message, const char* server_address) {
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("ERROR: socket creation");
-        exit(EXIT_FAILURE);;
+        exit(EXIT_FAILURE);
     }
 
     memset(&serv_addr, 0, sizeof(serv_addr));
