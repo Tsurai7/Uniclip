@@ -14,7 +14,7 @@
 #define TCP_PORT 108787
 
 #define BROADCAST_ADDRESS "255.255.255.255"
-#define BUFFER_SIZE (1024 * 64)
+#define BUFFER_SIZE 1024
 #define PATH_MAX 256
 
 std::unordered_set<std::string> ConnectedDevices;
@@ -186,7 +186,6 @@ void send_text_to_tcp(const char* message, const char* server_address) {
 
     int sock;
     struct sockaddr_in serv_addr;
-    char buffer[BUFFER_SIZE];
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("ERROR: socket creation");
@@ -217,14 +216,25 @@ void send_text_to_tcp(const char* message, const char* server_address) {
 
     sleep(1);
 
-    if (send(sock, encryptedMessage.c_str(), strlen(encryptedMessage.c_str()), 0) < 0) {
+    size_t encryptedMessageSize = encryptedMessage.length();
+    char* encryptedMessageBuffer = (char*)malloc(encryptedMessageSize + 1);
+    if (!encryptedMessageBuffer) {
+        perror("Memory allocation error");
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+    strcpy(encryptedMessageBuffer, encryptedMessage.c_str());
+
+    if (send(sock, encryptedMessageBuffer, encryptedMessageSize, 0) < 0) {
         perror("Message sending error");
+        free(encryptedMessageBuffer);
         close(sock);
         exit(EXIT_FAILURE);
     }
 
-    printf("Message sent: %s\n", encryptedMessage.c_str());
+    printf("Message sent: %s\n", encryptedMessageBuffer);
 
+    free(encryptedMessageBuffer);
     close(sock);
 }
 
@@ -324,21 +334,38 @@ void send_to_tcp_handler(data_info info, const char* server_address) {
 }
 
 std::string recieve_text_tcp(int socket) {
-    char text[BUFFER_SIZE];
-    memset(text, 0, BUFFER_SIZE);
+    char* text = nullptr;
+    size_t text_size = 0;
+    ssize_t valread;
 
-    int valread = read(socket, text, BUFFER_SIZE);
+    while (true) {
+        text = (char*)realloc(text, text_size + BUFFER_SIZE);
+        if (!text) {
+            perror("Memory allocation error");
+            return "";
+        }
 
-    std::string decryptedMessage = decryptRSA(std::string(text), privateKey, n);
+        valread = read(socket, text + text_size, BUFFER_SIZE);
+        if (valread < 0) {
+            perror("Error reading from socket");
+            free(text);
+            return "";
+        } else if (valread == 0) {
+            // End of data
+            break;
+        }
 
+        text_size += valread;
+    }
+
+    std::string decryptedMessage = decryptRSA(std::string(text, text_size), privateKey, n);
     run_set_clip_command(decryptedMessage.c_str());
-    printf("Recieved text: %s\n", text);
-
+    printf("Received text: %.*s\n", (int)text_size, text);
     printf("Decrypted text: %s\n", decryptedMessage.c_str());
-
     notify("Uniclip", "New local clip");
 
-    return text;
+    free(text);
+    return decryptedMessage;
 }
 
 void recieve_file_tcp(int socket, const char* filename) {
@@ -358,7 +385,6 @@ void recieve_file_tcp(int socket, const char* filename) {
             fclose(file);
             exit(1);
         } else if (bytes_received == 0) {
-            // End of file
             break;
         }
 
