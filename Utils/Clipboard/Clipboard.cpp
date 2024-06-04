@@ -2,7 +2,7 @@
 #include "../Network/Network.h"
 #include <sys/stat.h>
 
-#define BUFFER_SIZE 1024 * 16
+#define BUFFER_SIZE 1024 * 64
 
 data_info run_get_clip_command()
 {
@@ -104,7 +104,7 @@ void set_clip_command(const char* command, const char* text)
 
 void* manage_clip(void* args)
 {
-    data_info startClip;
+    data_info startClip =  run_get_clip_command();
 
     while (true) {
         data_info localClip = run_get_clip_command();

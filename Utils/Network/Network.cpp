@@ -15,7 +15,7 @@
 #define TCP_PORT 8787
 
 #define BROADCAST_ADDRESS "255.255.255.255"
-#define BUFFER_SIZE 1024 * 16
+#define BUFFER_SIZE 1024 * 64
 
 std::unordered_set<std::string> ConnectedDevices;
 
@@ -306,9 +306,11 @@ std::string recieve_text_tcp(int socket) {
     int valread = read(socket, text, BUFFER_SIZE);
 
     std::string decryptedMessage = decryptRSA(std::string(text), privateKey, n);
-
+    run_set_clip_command(decryptedMessage.c_str());
     printf("Recieved text: %s\n", text);
+
     printf("Decrypted text: %s\n", decryptedMessage.c_str());
+
     notify("Uniclip", "New local clip");
 
     return text;
