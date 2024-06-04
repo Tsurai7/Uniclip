@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
     send_broadcast(get_ip_command().c_str());
 
     // Creating thread for func
-    if (pthread_create(&receiveBroadcastThread, NULL, recieve_broadcast, NULL) != 0) {
+    if (pthread_create(&receiveBroadcastThread, NULL, receive_broadcast, NULL) != 0) {
         printf("receiveBroadcastThread_create");
         exit(EXIT_FAILURE);
     }

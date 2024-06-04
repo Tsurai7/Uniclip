@@ -2,7 +2,7 @@
 #include "../Network/Network.h"
 #include <sys/stat.h>
 
-#define BUFFER_SIZE 1024 * 64
+#define BUFFER_SIZE 1024
 
 data_info run_get_clip_command()
 {

@@ -15,7 +15,7 @@
 
 #define BROADCAST_ADDRESS "255.255.255.255"
 #define BUFFER_SIZE 1024
-#define PATH_MAX 256
+#define PATH_MAX 1024
 
 std::unordered_set<std::string> ConnectedDevices;
 
@@ -53,7 +53,8 @@ void send_broadcast(const char *message)
     close(socket_fd);
 }
 
-void *recieve_broadcast(void *args) {
+void *receive_broadcast(void *args)
+{
     int socket_fd, binding;
 
     struct sockaddr_in client_address{};
@@ -111,7 +112,8 @@ struct sockaddr_in set_up_udp_socket(int port, in_addr_t address, int *socket_fd
     return socket_address;
 }
 
-std::string get_ip_linux() {
+std::string get_ip_linux()
+{
     std::string localIpAddress;
     struct ifaddrs* ifAddrStruct = nullptr;
     struct ifaddrs* ifa = nullptr;
@@ -138,7 +140,8 @@ std::string get_ip_linux() {
     return localIpAddress;
 }
 
-std::string get_ip_mac() {
+std::string get_ip_mac()
+{
     std::string ipAddress;
     struct ifaddrs* ifAddrStruct = nullptr;
     struct ifaddrs* ifa = nullptr;
@@ -165,7 +168,8 @@ std::string get_ip_mac() {
     return ipAddress;
 }
 
-std::string get_ip_command() {
+std::string get_ip_command()
+{
 #ifdef __APPLE__
     return get_ip_mac();
 #elif __linux__
@@ -173,12 +177,14 @@ std::string get_ip_command() {
 #endif
 }
 
-void send_to_all_tcp(data_info info) {
+void send_to_all_tcp(data_info info)
+{
     for (std::string element : ConnectedDevices)
         send_to_tcp_handler(info, element.c_str());
 }
 
-void send_text_to_tcp(const char* message, const char* server_address) {
+void send_text_to_tcp(const char* message, const char* server_address)
+{
     generateRSAKeys(p, q, publicKey, privateKey, n);
 
     std::string encryptedMessage = encryptRSA(message, publicKey, n);
@@ -218,11 +224,13 @@ void send_text_to_tcp(const char* message, const char* server_address) {
 
     size_t encryptedMessageSize = encryptedMessage.length();
     char* encryptedMessageBuffer = (char*)malloc(encryptedMessageSize + 1);
+
     if (!encryptedMessageBuffer) {
         perror("Memory allocation error");
         close(sock);
         exit(EXIT_FAILURE);
     }
+
     strcpy(encryptedMessageBuffer, encryptedMessage.c_str());
 
     if (send(sock, encryptedMessageBuffer, encryptedMessageSize, 0) < 0) {
@@ -238,8 +246,10 @@ void send_text_to_tcp(const char* message, const char* server_address) {
     close(sock);
 }
 
-void send_file_to_tcp(data_info info, const char* server_address) {
+void send_file_to_tcp(data_info info, const char* server_address)
+{
     int sock;
+
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Error creating socket");
         exit(EXIT_FAILURE);
@@ -249,6 +259,7 @@ void send_file_to_tcp(data_info info, const char* server_address) {
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(TCP_PORT);
+
     if (inet_pton(AF_INET, server_address, &serv_addr.sin_addr) <= 0) {
         perror("Incorrect address");
         close(sock);
@@ -266,6 +277,7 @@ void send_file_to_tcp(data_info info, const char* server_address) {
         close(sock);
         exit(EXIT_FAILURE);
     }
+
     sleep(1);
 
     if (send(sock, info.FileName.c_str(), strlen(info.FileName.c_str()), 0) < 0) {
@@ -273,9 +285,11 @@ void send_file_to_tcp(data_info info, const char* server_address) {
         close(sock);
         exit(EXIT_FAILURE);
     }
+
     sleep(1);
 
     FILE* file = fopen(info.FilePath.c_str(), "rb");
+
     if (!file) {
         perror("Opening file error");
         close(sock);
@@ -315,11 +329,13 @@ void send_file_to_tcp(data_info info, const char* server_address) {
 
     printf("File sent\n");
     free(buffer);
+
     fclose(file);
     close(sock);
 }
 
-void send_to_tcp_handler(data_info info, const char* server_address) {
+void send_to_tcp_handler(data_info info, const char* server_address)
+{
     switch (info.Type) {
         case Text:
             send_text_to_tcp(info.Data.c_str(), server_address);
@@ -333,7 +349,8 @@ void send_to_tcp_handler(data_info info, const char* server_address) {
     }
 }
 
-std::string recieve_text_tcp(int socket) {
+std::string receive_text_tcp(int socket)
+{
     char* text = nullptr;
     size_t text_size = 0;
     ssize_t valread;
@@ -360,15 +377,18 @@ std::string recieve_text_tcp(int socket) {
 
     std::string decryptedMessage = decryptRSA(std::string(text, text_size), privateKey, n);
     run_set_clip_command(decryptedMessage.c_str());
+
     printf("Received text: %.*s\n", (int)text_size, text);
     printf("Decrypted text: %s\n", decryptedMessage.c_str());
-    notify("Uniclip", "New local clip");
+
+    Notify("Uniclip", "New local clip");
 
     free(text);
     return decryptedMessage;
 }
 
-void recieve_file_tcp(int socket, const char* filename) {
+void receive_file_tcp(int socket, const char* filename)
+{
     FILE* file = fopen(filename, "wb");
     if (file == NULL) {
         perror("Error opening file");
@@ -410,9 +430,11 @@ void recieve_file_tcp(int socket, const char* filename) {
     run_set_clip_command(resolved_path);
 }
 
-void* run_tcp_server(void* args) {
+void* run_tcp_server(void* args)
+{
     int server_fd, new_socket;
     struct sockaddr_in address;
+
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE];
 
@@ -454,7 +476,7 @@ void* run_tcp_server(void* args) {
         printf("Header: %s\n", buffer);
 
         if (strstr(buffer, "[TEXT]") != NULL) {
-            recieve_text_tcp(new_socket);
+            receive_text_tcp(new_socket);
         }
 
         else if (strstr(buffer, "[FILE]") != NULL) {
@@ -462,9 +484,9 @@ void* run_tcp_server(void* args) {
 
             std::string name = buffer;
             printf("File name: %s\n", buffer);
-            recieve_file_tcp(new_socket, name.c_str());
+            receive_file_tcp(new_socket, name.c_str());
 
-            notify("Uniclip", "New local clip");
+            Notify("Uniclip", "New local clip");
         }
 
          else {
