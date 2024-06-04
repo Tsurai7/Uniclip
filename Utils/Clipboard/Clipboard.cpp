@@ -2,6 +2,7 @@
 #include "../Network/Network.h"
 #include <sys/stat.h>
 
+#define BUFFER_SIZE 1024 * 16
 
 data_info run_get_clip_command()
 {
@@ -34,7 +35,7 @@ void run_set_clip_command(const char* text)
 data_info get_clip_command(const char* command)
 {
     data_info info;
-    char buffer[8 * 1024];
+    char buffer[BUFFER_SIZE];
     std::string clipboard;
 
     FILE* pipe = popen(command, "r");

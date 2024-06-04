@@ -15,7 +15,7 @@
 #define TCP_PORT 8787
 
 #define BROADCAST_ADDRESS "255.255.255.255"
-#define BUFFER_SIZE 1024 * 8
+#define BUFFER_SIZE 1024 * 16
 
 std::unordered_set<std::string> ConnectedDevices;
 
@@ -53,8 +53,6 @@ void send_broadcast(const char *message)
 }
 
 void *recieve_broadcast(void *args) {
-
-    ConnectedDevices.emplace("127.0.0.1");
     int socket_fd, binding;
 
     struct sockaddr_in client_address{};
