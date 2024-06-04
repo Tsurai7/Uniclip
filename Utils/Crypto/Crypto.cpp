@@ -1,10 +1,10 @@
 #include <iostream>
 
+
 int gcd(int a, int b) {
     if (b == 0) return a;
     return gcd(b, a % b);
 }
-
 
 int modPow(int base, int exponent, int n) {
     int result = 1;
@@ -18,7 +18,6 @@ int modPow(int base, int exponent, int n) {
     }
     return result;
 }
-
 
 void generateRSAKeys(int p, int q, int& publicKey, int& privateKey, int& n) {
     n = p * q;
@@ -40,7 +39,6 @@ void generateRSAKeys(int p, int q, int& publicKey, int& privateKey, int& n) {
             privateKey++;
     }
 }
-
 
 std::string encryptRSA(const std::string& message, int publicKey, int n) {
     std::string encryptedMessage = "";

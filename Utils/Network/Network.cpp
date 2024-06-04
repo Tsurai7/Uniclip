@@ -94,7 +94,6 @@ void *recieve_broadcast(void *args) {
     }
 }
 
-
 struct sockaddr_in set_up_udp_socket(int port, in_addr_t address, int *socket_fd) {
     struct sockaddr_in socket_address;
     memset(&socket_address, 0, sizeof(socket_address));
@@ -112,7 +111,6 @@ struct sockaddr_in set_up_udp_socket(int port, in_addr_t address, int *socket_fd
 
     return socket_address;
 }
-
 
 std::string get_ip_linux() {
     int fd;
@@ -132,7 +130,6 @@ std::string get_ip_linux() {
 
     return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
 }
-
 
 std::string get_ip_mac() {
     std::string ipAddress;
@@ -161,7 +158,6 @@ std::string get_ip_mac() {
     return ipAddress;
 }
 
-
 std::string get_ip_command() {
 #ifdef __APPLE__
     return get_ip_mac();
@@ -170,12 +166,10 @@ std::string get_ip_command() {
 #endif
 }
 
-
 void send_to_all_tcp(data_info info) {
     for (std::string element : ConnectedDevices)
         send_to_tcp_handler(info, element.c_str());
 }
-
 
 void send_text_to_tcp(const char* message, const char* server_address) {
     generateRSAKeys(p, q, publicKey, privateKey, n);
@@ -225,7 +219,6 @@ void send_text_to_tcp(const char* message, const char* server_address) {
 
     close(sock);
 }
-
 
 void send_file_to_tcp(data_info info, const char* server_address) {
     int sock;
@@ -308,7 +301,6 @@ void send_to_tcp_handler(data_info info, const char* server_address) {
     }
 }
 
-
 std::string recieve_text_tcp(int socket) {
     char text[BUFFER_SIZE];
     memset(text, 0, BUFFER_SIZE);
@@ -323,7 +315,6 @@ std::string recieve_text_tcp(int socket) {
 
     return text;
 }
-
 
 void recieve_file_tcp(int socket, const char* filename) {
     FILE* file = fopen(filename, "wb");
@@ -361,7 +352,6 @@ void recieve_file_tcp(int socket, const char* filename) {
 
     run_set_clip_command(resolved_path);
 }
-
 
 void* run_tcp_server(void* args) {
     int server_fd, new_socket;

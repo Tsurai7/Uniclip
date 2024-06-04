@@ -20,7 +20,6 @@ data_info run_get_clip_command()
     #endif
 }
 
-
 void run_set_clip_command(const char* text)
 {
     #ifdef __APPLE__
@@ -31,7 +30,6 @@ void run_set_clip_command(const char* text)
         return "ERROR: unknown operating system.\n";
     #endif
 }
-
 
 data_info get_clip_command(const char* command)
 {
@@ -84,7 +82,6 @@ data_info get_clip_command(const char* command)
     return info;
 }
 
-
 void set_clip_command(const char* command, const char* text)
 {
     FILE *pipe = popen(command, "w");
@@ -103,7 +100,6 @@ void set_clip_command(const char* command, const char* text)
         exit(EXIT_FAILURE);
     }
 }
-
 
 void* manage_clip(void* args)
 {
