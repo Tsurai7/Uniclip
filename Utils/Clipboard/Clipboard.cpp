@@ -1,6 +1,8 @@
 #include "Clipboard.h"
+#include "../Logging/Logging.h"
 #include "../Network/Network.h"
 #include <sys/stat.h>
+
 
 #define BUFFER_SIZE 1024
 
@@ -109,7 +111,7 @@ void* manage_clip(void* args)
     while (true) {
         data_info localClip = run_get_clip_command();
 
-        if ((localClip.Data != startClip.Data) || (localClip.Type != startClip.Type) ) {
+        if ((localClip.Data != startClip.Data) || (localClip.Type != startClip.Type) || (localClip.FilePath != startClip.FilePath)) {
             startClip = localClip;
 
             send_to_all_tcp(localClip);
