@@ -1,125 +1,68 @@
 #include <iostream>
-#include <string>
 
-// Function to check if a number is prime using the Miller-Rabin primality test
-bool isPrime(int n, int k = 5) {
-    if (n <= 1) return false;
-    if (n <= 3) return true;
 
-    // Write n as 2^r * d + 1
-    int r = 0;
-    int d = n - 1;
-    while (d % 2 == 0) {
-        d /= 2;
-        r++;
-    }
-
-    // Witness loop
-    for (int i = 0; i < k; i++) {
-        int a = 2 + rand() % (n - 3);
-        int x = std::pow(a, d);
-        x %= n;
-        if (x == 1 || x == n - 1) continue;
-
-        for (int j = 0; j < r - 1; j++) {
-            x = std::pow(x, 2);
-            x %= n;
-            if (x == 1) return false;
-            if (x == n - 1) break;
-        }
-
-        if (x != n - 1) return false;
-    }
-
-    return true;
-}
-
-// Function to generate a random prime number between min and max
-int generatePrime(int min, int max) {
-    srand(time(nullptr));
-
-    int prime;
-    do {
-        prime = rand() % (max - min + 1) + min;
-    } while (!isPrime(prime));
-
-    return prime;
-}
-
-// Function to calculate the greatest common divisor of two numbers
 int gcd(int a, int b) {
-    while (b != 0) {
-        int temp = b;
-        b = a % b;
-        a = temp;
-    }
-    return a;
+    if (b == 0) return a;
+    return gcd(b, a % b);
 }
 
-// Function to find the modular multiplicative inverse
-int modInverse(int a, int m) {
-    a = a % m;
-    for (int x = 1; x < m; x++) {
-        if ((a * x) % m == 1) {
-            return x;
+int modPow(int base, int exponent, int n) {
+    int result = 1;
+    base = base % n;
+    while (exponent > 0) {
+        if (exponent % 2 == 1) {
+            result = (result * base) % n;
         }
+        exponent = exponent >> 1;
+        base = (base * base) % n;
     }
-    return 1;
+    return result;
 }
 
-// Function to generate RSA keys
-void generateRSAKeys(int* publicKey, int* privateKey, int* modulus) {
-    int p = generatePrime(100, 1000);
-    int q = generatePrime(100, 1000);
-    int n = p * q;
+void generateRSAKeys(int p, int q, int& publicKey, int& privateKey, int& n) {
+    n = p * q;
     int phi = (p - 1) * (q - 1);
-    int e;
-    do {
-        e = generatePrime(2, phi - 1);
-    } while (gcd(e, phi) != 1);
-    int d = modInverse(e, phi);
 
-    *publicKey = e;
-    *privateKey = d;
-    *modulus = n;
-
-    std::cout << "Generated public key: " << *publicKey << std::endl;
-    std::cout << "Generated private key: " << *privateKey << std::endl;
-    std::cout << "Generated modulus: " << *modulus << std::endl;
-}
-
-// Function to encrypt a string using RSA
-std::string rsaEncrypt(const std::string& plainText, int publicKey, int modulus) {
-    std::string encryptedText = "";
-    for (char c : plainText) {
-        int charValue = static_cast<int>(c);
-        int encryptedChar = 1;
-        for (int i = 0; i < publicKey; i++) {
-            encryptedChar *= charValue;
-            encryptedChar %= modulus;
-        }
-        encryptedText += std::to_string(encryptedChar) + " ";
+    publicKey = 2;
+    while (publicKey < phi) {
+        if (gcd(publicKey, phi) == 1)
+            break;
+        else
+            publicKey++;
     }
-    return encryptedText;
+
+    privateKey = 1;
+    while (true) {
+        if ((publicKey * privateKey) % phi == 1)
+            break;
+        else
+            privateKey++;
+    }
 }
 
-// Function to decrypt a string using RSA
-std::string rsaDecrypt(const std::string& encryptedText, int privateKey, int modulus) {
-    std::string decryptedText = "";
-    std::string currentNumber = "";
-    for (char c : encryptedText) {
+std::string encryptRSA(const std::string& message, int publicKey, int n) {
+    std::string encryptedMessage = "";
+    for (char c : message) {
+        int m = c;
+        int encryptedChar = modPow(m, publicKey, n);
+        encryptedMessage += std::to_string(encryptedChar) + " ";
+    }
+    return encryptedMessage;
+}
+
+std::string decryptRSA(const std::string& encryptedMessage, int privateKey, int n) {
+    std::string decryptedMessage = "";
+    std::string encryptedChar = "";
+
+    for (char c : encryptedMessage) {
         if (c == ' ') {
-            int encryptedChar = std::stoi(currentNumber);
-            int decryptedChar = 1;
-            for (int i = 0; i < privateKey; i++) {
-                decryptedChar *= encryptedChar;
-                decryptedChar %= modulus;
-            }
-            decryptedText += static_cast<char>(decryptedChar);
-            currentNumber = "";
+            int m = stoi(encryptedChar);
+            int decryptedChar = modPow(m, privateKey, n);
+            decryptedMessage += char(decryptedChar);
+            encryptedChar = "";
         } else {
-            currentNumber += c;
+            encryptedChar += c;
         }
     }
-    return decryptedText;
+    return decryptedMessage;
 }
