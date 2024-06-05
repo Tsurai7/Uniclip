@@ -41,7 +41,5 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    Logger("[SESSION ENDED]", "");
-
     return 0;
 }

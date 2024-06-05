@@ -4,7 +4,7 @@ project(Uniclip)
 set(CMAKE_CXX_STANDARD 17)
 
 
-add_executable(Uniclip uniclip.cpp
+add_executable(uniclip.cpp
         Utils/Network/Network.cpp
         Utils/Network/Network.h
         Utils/Clipboard/Clipboard.cpp
