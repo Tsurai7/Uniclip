@@ -385,7 +385,7 @@ std::string receive_text_tcp(int socket)
     run_set_clip_command(decryptedMessage.c_str());
 
     printf("[TCP] Received text: %.*s\n", (int)text_size, text);
-    Logger("[TCP] TEXT RECEIVED:", text);
+    Logger("[TCP] TEXT RECEIVED:", "");
 
     printf("New local clip: %s\n", decryptedMessage.c_str());
     Notify("Uniclip", "New local clip");
