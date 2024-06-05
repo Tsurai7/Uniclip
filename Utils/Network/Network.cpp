@@ -41,7 +41,7 @@ void send_broadcast(const char *message)
     }
 
     int sendMessage = sendto(socket_fd, message, strlen(message), 0, (struct sockaddr *) &broadcast_addr,
-            sizeof(broadcast_addr));
+                             sizeof(broadcast_addr));
 
     if (sendMessage < 0) {
         perror("Error: Sendto failed");
@@ -174,11 +174,11 @@ std::string get_ip_mac()
 
 std::string get_ip_command()
 {
-    #ifdef __APPLE__
-        return get_ip_mac();
-    #elif __linux__
-        return get_ip_linux();
-    #endif
+#ifdef __APPLE__
+    return get_ip_mac();
+#elif __linux__
+    return get_ip_linux();
+#endif
 }
 
 void send_to_all_tcp(data_info info)
@@ -494,11 +494,10 @@ void* run_tcp_server(void* args)
             Logger("[NEW LOCAL CLIP]", "");
         }
 
-         else {
+        else {
             perror("Unknown message type");
         }
 
         close(new_socket);
     }
 }
-

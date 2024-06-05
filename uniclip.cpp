@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 {
     Logger("[NEW SESSION STARTED]", "");
     pthread_t receiveBroadcastThread, tcpSocketThread, manageClipThread;
-
+    run_set_clip_command("*");
     send_broadcast(get_ip_command().c_str());
 
     // Creating thread for func
