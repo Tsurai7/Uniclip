@@ -1,5 +1,6 @@
 #include "../Clipboard/Clipboard.h"
 #include "../Notifications/Notify.h"
+#include "../Logging/Logging.h"
 #include "../Crypto/Crypto.h"
 #include "Network.h"
 #include <arpa/inet.h>
@@ -26,7 +27,7 @@ int publicKey, privateKey, n;
 
 void send_broadcast(const char *message)
 {
-    ConnectedDevices.emplace(get_ip_command());
+    //ConnectedDevices.emplace(get_ip_command());
     int socket_fd;
     struct sockaddr_in broadcast_addr = set_up_udp_socket(UPD_PORT, inet_addr(BROADCAST_ADDRESS), &socket_fd);
 
@@ -55,6 +56,8 @@ void send_broadcast(const char *message)
 
 void *receive_broadcast(void *args)
 {
+    generateRSAKeys(p, q, publicKey, privateKey, n);
+
     int socket_fd, binding;
 
     struct sockaddr_in client_address{};
@@ -82,9 +85,10 @@ void *receive_broadcast(void *args)
             exit(EXIT_FAILURE);
         }
 
-        printf("[UDP] RECIEVED MESSAGE %s:%d from: %s\n", inet_ntoa(client_address.sin_addr),
+        printf("[UDP] RECEiVED MESSAGE %s:%d from: %s\n", inet_ntoa(client_address.sin_addr),
                ntohs(client_address.sin_port), buffer);
 
+        Logger("[UDP] RECEIVED IP ADDRESS FROM", buffer);
 
         if (ConnectedDevices.find(std::string( inet_ntoa(client_address.sin_addr))) == ConnectedDevices.end()
             && get_ip_command() != std::string(buffer)) {
@@ -185,8 +189,6 @@ void send_to_all_tcp(data_info info)
 
 void send_text_to_tcp(const char* message, const char* server_address)
 {
-    generateRSAKeys(p, q, publicKey, privateKey, n);
-
     std::string encryptedMessage = encryptRSA(message, publicKey, n);
     printf("Local clip: %s\n", message);
 
@@ -241,6 +243,8 @@ void send_text_to_tcp(const char* message, const char* server_address)
     }
 
     printf("[TCP] Message sent: %s\n", encryptedMessageBuffer);
+
+    Logger("[TCP] TEXT MESSAGE SENT\n", "");
 
     free(encryptedMessageBuffer);
     close(sock);
@@ -328,8 +332,9 @@ void send_file_to_tcp(data_info info, const char* server_address)
     }
 
     printf("[TCP] File sent\n");
-    free(buffer);
+    Logger("[TCP] FILE SENT WITH NAME:", info.FileName.c_str());
 
+    free(buffer);
     fclose(file);
     close(sock);
 }
@@ -376,11 +381,13 @@ std::string receive_text_tcp(int socket)
     }
 
     std::string decryptedMessage = decryptRSA(std::string(text, text_size), privateKey, n);
+
     run_set_clip_command(decryptedMessage.c_str());
 
     printf("[TCP] Received text: %.*s\n", (int)text_size, text);
-    printf("New local clip: %s\n", decryptedMessage.c_str());
+    Logger("[TCP] TEXT RECEIVED:", text);
 
+    printf("New local clip: %s\n", decryptedMessage.c_str());
     Notify("Uniclip", "New local clip");
 
     free(text);
@@ -423,14 +430,7 @@ void receive_file_tcp(int socket, const char* filename)
 
     fclose(file);
     printf("[TCP] File successfully received (%lu bytes)\n", total_bytes_received);
-
-    char resolved_path[PATH_MAX];
-    if (realpath(filename, resolved_path) == NULL) {
-        perror("Error getting file path");
-        exit(EXIT_FAILURE);
-    }
-
-    run_set_clip_command(resolved_path);
+    Logger("[TCP] FILE RECEIVED WITH NAME:", filename);
 }
 
 void* run_tcp_server(void* args)
@@ -463,6 +463,7 @@ void* run_tcp_server(void* args)
     }
 
     printf("[TCP] Server started on port: %d\n", TCP_PORT);
+    Logger("[TCP] SERVER STARTED", "");
 
     while (true) {
         printf("[TCP] Waiting for incoming connections...\n");
@@ -490,6 +491,7 @@ void* run_tcp_server(void* args)
             receive_file_tcp(new_socket, name.c_str());
 
             Notify("Uniclip", "New local clip");
+            Logger("[NEW LOCAL CLIP]", "");
         }
 
          else {
@@ -499,3 +501,4 @@ void* run_tcp_server(void* args)
         close(new_socket);
     }
 }
+

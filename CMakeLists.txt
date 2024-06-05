@@ -3,11 +3,8 @@ project(Uniclip)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(ZLIB REQUIRED)
 
-
-
-add_executable(Uniclip uniclip.cpp
+add_executable(uniclip.cpp
         Utils/Network/Network.cpp
         Utils/Network/Network.h
         Utils/Clipboard/Clipboard.cpp
@@ -18,6 +15,5 @@ add_executable(Uniclip uniclip.cpp
         Utils/Logging/Logging.h
         Utils/Notifications/Notify.cpp
         Utils/Notifications/Notify.h
+        uniclip.cpp
 )
-
-target_link_libraries(Uniclip PRIVATE ZLIB::ZLIB)

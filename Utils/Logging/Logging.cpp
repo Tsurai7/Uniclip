@@ -1,36 +1,32 @@
 #include <cstdio>
-#include <ctime>
+#include <cstdlib>
 #include <unistd.h>
 
-void Logger(const char* action, const char* message)
-{
-    FILE* file;
-    const char* log_file_path = "log.txt";
+void Logger(const char* action, const char* message) {
+    FILE *file;
 
-    if (access(log_file_path, F_OK) == -1) {
-
-        file = fopen(log_file_path, "w");
+    if (access("log.txt", F_OK) == -1) {
+        file = fopen("log.txt", "w");
 
         if (file == NULL) {
-            fprintf(stderr, "Error opening log file: %s\n", log_file_path);
-            return;
+            printf("Error opening log file");
+            exit(1);
         }
+
         fclose(file);
     }
 
-    file = fopen(log_file_path, "a");
+    file = fopen("log.txt", "a");
 
     if (file == NULL) {
-        fprintf(stderr, "Error opening log file: %s\n", log_file_path);
-        return;
+        printf("Error opening log file");
+        exit(EXIT_FAILURE);
     }
 
-    time_t now = time(nullptr);
-    struct tm* local_time = localtime(&now);
-    char date_time[64];
+    fseek(file, 0, SEEK_END);
+    fprintf(file, "");
 
-    strftime(date_time, sizeof(date_time), "%Y-%m-%d %H:%M:%S", local_time);
+    fprintf(file, "[%s %s] %s %s\n", __DATE__, __TIME__, action, message);
 
-    fprintf(file, "\n\n[%s] %s\n%s\n", date_time, action, message);
     fclose(file);
 }

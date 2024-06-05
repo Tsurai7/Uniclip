@@ -1,5 +1,6 @@
 #include "Utils/Notifications/Notify.h"
 #include "Utils/Clipboard/Clipboard.h"
+#include "Utils//Logging/Logging.h"
 #include "Utils/Network/Network.h"
 #include <pthread.h>
 #include <unistd.h>
@@ -8,6 +9,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+    Logger("[NEW SESSION STARTED]", "");
     pthread_t receiveBroadcastThread, tcpSocketThread, manageClipThread;
 
     send_broadcast(get_ip_command().c_str());
