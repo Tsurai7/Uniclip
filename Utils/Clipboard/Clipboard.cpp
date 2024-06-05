@@ -17,7 +17,7 @@ data_info run_get_clip_command()
             return get_clip_command("pbpaste");
         }
     #elif __linux__
-        return get_clip_command("xclip -o");;
+        return get_clip_command("xclip -selection clipboard");;
     #else
         return "ERROR: unknown operating system.\n";
     #endif
