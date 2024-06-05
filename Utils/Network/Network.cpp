@@ -27,7 +27,7 @@ int publicKey, privateKey, n;
 
 void send_broadcast(const char *message)
 {
-    ConnectedDevices.emplace(get_ip_command());
+    //ConnectedDevices.emplace(get_ip_command());
     int socket_fd;
     struct sockaddr_in broadcast_addr = set_up_udp_socket(UPD_PORT, inet_addr(BROADCAST_ADDRESS), &socket_fd);
 
@@ -85,10 +85,10 @@ void *receive_broadcast(void *args)
             exit(EXIT_FAILURE);
         }
 
-        printf("[UDP] RECIEVED MESSAGE %s:%d from: %s\n", inet_ntoa(client_address.sin_addr),
+        printf("[UDP] RECEiVED MESSAGE %s:%d from: %s\n", inet_ntoa(client_address.sin_addr),
                ntohs(client_address.sin_port), buffer);
 
-        Logger("[UDP] RECIEVED IP ADDRESS FROM", buffer);
+        Logger("[UDP] RECEIVED IP ADDRESS FROM", buffer);
 
         if (ConnectedDevices.find(std::string( inet_ntoa(client_address.sin_addr))) == ConnectedDevices.end()
             && get_ip_command() != std::string(buffer)) {
@@ -244,7 +244,7 @@ void send_text_to_tcp(const char* message, const char* server_address)
 
     printf("[TCP] Message sent: %s\n", encryptedMessageBuffer);
 
-    Logger("[TCP] TEXT MESSAGE SENT:\n", encryptedMessageBuffer);
+    Logger("[TCP] TEXT MESSAGE SENT\n", "");
 
     free(encryptedMessageBuffer);
     close(sock);
@@ -491,6 +491,7 @@ void* run_tcp_server(void* args)
             receive_file_tcp(new_socket, name.c_str());
 
             Notify("Uniclip", "New local clip");
+            Logger("[NEW LOCAL CLIP]", "");
         }
 
          else {

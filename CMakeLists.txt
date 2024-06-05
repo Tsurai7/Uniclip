@@ -15,4 +15,5 @@ add_executable(uniclip.cpp
         Utils/Logging/Logging.h
         Utils/Notifications/Notify.cpp
         Utils/Notifications/Notify.h
+        uniclip.cpp
 )

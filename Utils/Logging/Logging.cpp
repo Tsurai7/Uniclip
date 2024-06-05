@@ -26,7 +26,7 @@ void Logger(const char* action, const char* message) {
     fseek(file, 0, SEEK_END);
     fprintf(file, "");
 
-    fprintf(file, "[%s %s] %s\n%s\n", __DATE__, __TIME__, action, message);
+    fprintf(file, "[%s %s] %s %s\n", __DATE__, __TIME__, action, message);
 
     fclose(file);
 }
