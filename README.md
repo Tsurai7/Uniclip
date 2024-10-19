@@ -1,7 +1,7 @@
 # Uniclip 
 
 
-### Uniclip is a university project, developed by [Tsurai7](https://github.com/Tsurai7) and [rudemaru](https://github.com/rudemaru), which provides functionality for shared clipboard on your devices.
+### Uniclip is a university project, which provides functionality for shared clipboard on your devices.
 
 
 ### TODO:
@@ -21,6 +21,6 @@
 
 
 ### Usage: 
-* Clone the [repository](https://github.com/Tsurai7/Kharashun-Demidovich_OSISP_prj_2024.git)
+* Clone the repository
 * Run the program
 * It will work in the background and send your clipboard whenever it changes
